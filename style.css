@@ -1,0 +1,368 @@
+/* General Styles */
+:root {
+    --primary-color: #FF6F61; /* Warm Red/Orange */
+    --secondary-color: #FFC300; /* Sunny Yellow */
+    --accent-color: #6A057F; /* Deep Purple */
+    --background-color: #F8F8F8; /* Light Grey */
+    --text-color: #333333;
+    --sidebar-bg: #FFF3E0; /* Light Creamy Orange */
+    --game-bg: #E0F2F7; /* Light Blue for game areas */
+    --autumn-leaf: #D32F2F; /* Dark Red */
+    --autumn-orange: #F57C00; /* Deep Orange */
+    --autumn-yellow: #FFEB3B; /* Bright Yellow */
+    --border-radius-lg: 25px;
+    --border-radius-md: 15px;
+    --box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+#app-container {
+    display: flex;
+    background-color: #FFFFFF;
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--box-shadow);
+    width: 100%;
+    max-width: 1200px;
+    min-height: 800px;
+    overflow: hidden;
+}
+
+/* Sidebar Styles */
+#sidebar {
+    width: 280px;
+    background-color: var(--sidebar-bg);
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    border-right: 2px solid rgba(0, 0, 0, 0.05);
+}
+
+#sidebar h3 {
+    color: var(--accent-color);
+    margin-bottom: 15px;
+    font-size: 1.6em;
+    text-align: center;
+}
+
+#avatar-display, #rewards-display {
+    background-color: #FFFFFF;
+    border-radius: var(--border-radius-md);
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    width: 100%;
+    text-align: center;
+}
+
+#current-avatar {
+    margin-bottom: 20px;
+}
+
+#rewards-display p {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+/* Main Content Styles */
+#main-content {
+    flex-grow: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.screen {
+    display: none;
+    width: 100%;
+    max-width: 800px;
+    text-align: center;
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+.screen.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+#home-screen h1 {
+    color: var(--primary-color);
+    font-size: 3.5em;
+    margin-bottom: 20px;
+}
+
+#home-screen p {
+    font-size: 1.5em;
+    margin-bottom: 40px;
+}
+
+.game-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 25px;
+    margin-bottom: 50px;
+}
+
+.game-btn {
+    background-color: var(--secondary-color);
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--border-radius-lg);
+    padding: 25px 40px;
+    font-size: 1.8em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: var(--box-shadow);
+    transition: transform 0.2s, background-color 0.2s;
+    min-width: 250px;
+}
+
+.game-btn:hover {
+    transform: translateY(-5px);
+    background-color: var(--primary-color);
+}
+
+/* Buttons */
+.btn-primary, .btn-secondary, .btn-sidebar {
+    background-color: var(--primary-color);
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: 15px 30px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, background-color 0.2s;
+    margin-top: 15px;
+}
+
+.btn-primary:hover, .btn-sidebar:hover {
+    transform: translateY(-3px);
+    background-color: var(--accent-color);
+}
+
+.btn-secondary {
+    background-color: #9E9E9E;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-3px);
+    background-color: #757575;
+}
+
+.btn-sidebar {
+    font-size: 1em;
+    padding: 10px 20px;
+    margin-top: 10px;
+    width: 80%;
+}
+
+/* Avatar Selection */
+#avatar-selection-screen h2 {
+    color: var(--accent-color);
+    font-size: 2.5em;
+    margin-bottom: 30px;
+}
+
+#avatar-options {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.avatar-option {
+    font-size: 60px;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: var(--border-radius-md);
+    transition: transform 0.2s, background-color 0.2s;
+}
+
+.avatar-option:hover {
+    transform: scale(1.1);
+    background-color: rgba(var(--secondary-color), 0.2);
+}
+
+.avatar-option.selected {
+    background-color: var(--secondary-color);
+    box-shadow: var(--box-shadow);
+}
+
+#avatar-customization h3 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+#avatar-customization label {
+    font-size: 1.2em;
+    margin-right: 10px;
+}
+
+#clothing-color {
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+/* Game Screens */
+.game-screen h2 {
+    color: var(--primary-color);
+    font-size: 2.8em;
+    margin-bottom: 30px;
+}
+
+#saison-mystere-content {
+    background-color: var(--game-bg);
+    border-radius: var(--border-radius-md);
+    padding: 30px;
+    box-shadow: var(--box-shadow);
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+/* Boutique */
+#boutique-screen h2 {
+    color: var(--accent-color);
+    font-size: 2.5em;
+    margin-bottom: 30px;
+}
+
+#boutique-items {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.boutique-item {
+    background-color: #FFFFFF;
+    border-radius: var(--border-radius-md);
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    width: 180px;
+}
+
+.boutique-item p {
+    font-size: 1.1em;
+    margin: 10px 0;
+}
+
+.buy-btn {
+    background-color: var(--secondary-color);
+    color: #FFFFFF;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 15px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.buy-btn:hover {
+    background-color: var(--primary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #app-container {
+        flex-direction: column;
+        min-height: unset;
+        height: auto;
+    }
+
+    #sidebar {
+        width: 100%;
+        padding: 20px;
+        flex-direction: row;
+        justify-content: space-around;
+        border-right: none;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+    }
+
+    #avatar-display, #rewards-display {
+        width: 45%;
+        padding: 15px;
+    }
+
+    #sidebar h3 {
+        font-size: 1.2em;
+        margin-bottom: 10px;
+    }
+
+    #rewards-display p {
+        font-size: 1em;
+    }
+
+    .btn-sidebar {
+        width: auto;
+        padding: 8px 15px;
+        font-size: 0.9em;
+    }
+
+    #main-content {
+        padding: 20px;
+    }
+
+    #home-screen h1 {
+        font-size: 2.5em;
+    }
+
+    #home-screen p {
+        font-size: 1.2em;
+    }
+
+    .game-btn {
+        font-size: 1.5em;
+        padding: 20px 30px;
+        min-width: unset;
+        width: 100%;
+    }
+
+    #avatar-options {
+        flex-wrap: wrap;
+    }
+
+    .avatar-option {
+        font-size: 50px;
+    }
+
+    .game-screen h2 {
+        font-size: 2em;
+    }
+}
