@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar World - Apprentissage Ludique</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+</head>
+<body>
+    <div id="app-container">
+        <aside id="sidebar">
+            <div id="avatar-display">
+                <h3>Mon Avatar</h3>
+                <div id="current-avatar">
+                    <!-- Avatar image/emoji will be displayed here -->
+                    <span role="img" aria-label="avatar" style="font-size: 80px;">😊</span>
+                </div>
+                <button id="change-avatar-btn" class="btn-sidebar">Changer</button>
+            </div>
+            <div id="rewards-display">
+                <h3>Mes Récompenses</h3>
+                <p>⭐ <span id="stars-count">0</span> étoiles</p>
+                <p>🪙 <span id="coins-count">0</span> pièces</p>
+                <button id="boutique-btn" class="btn-sidebar">Boutique</button>
+            </div>
+            <div id="special-title-display" class="hidden">
+                <h3>Titre Spécial</h3>
+                <p>👑 Explorateur des Saisons !</p>
+            </div>
+        </aside>
+
+        <main id="main-content">
+            <section id="home-screen" class="screen active">
+                <h1>Bienvenue dans Avatar World !</h1>
+                <p>Choisis un jeu pour commencer l'aventure !</p>
+                <div class="game-buttons">
+                    <button class="game-btn" data-game="saisonMystere">🍂 Saison Mystère</button>
+                    <button class="game-btn" data-game="sonsMagiques">🎶 Les Sons Magiques</button>
+                    <button class="game-btn" data-game="meteoNature">☀️ Météo & Nature</button>
+                </div>
+                <button id="mini-games-btn" class="btn-primary">Mini-Jeux Éducatifs</button>
+                <button id="avatar-selection-btn" class="btn-primary">Choisis ton Avatar</button>
+            </section>
+
+            <section id="avatar-selection-screen" class="screen">
+                <h2>Choisis ton Avatar</h2>
+                <div id="avatar-options">
+                    <span class="avatar-option" data-avatar="😊">😊</span>
+                    <span class="avatar-option" data-avatar="😃">😃</span>
+                    <span class="avatar-option" data-avatar="😎">😎</span>
+                    <span class="avatar-option" data-avatar="🥳">🥳</span>
+                    <span class="avatar-option" data-avatar="🤩">🤩</span>
+                    <span class="avatar-option" data-avatar="🐶">🐶</span>
+                    <span class="avatar-option" data-avatar="🐱">🐱</span>
+                    <span class="avatar-option" data-avatar="🍎">🍎</span>
+                    <span class="avatar-option" data-avatar="🍌">🍌</span>
+                    <span class="avatar-option" data-avatar="🍓">🍓</span>
+                </div>
+                <div id="avatar-customization">
+                    <h3>Personnalise ton Avatar</h3>
+                    <label for="clothing-color">Couleur des vêtements:</label>
+                    <input type="color" id="clothing-color" value="#FFD700">
+                    <!-- More customization options will go here -->
+                </div>
+                <button id="save-avatar-btn" class="btn-primary">Sauvegarder l'Avatar</button>
+                <button class="btn-secondary back-to-home">Retour à l'accueil</button>
+            </section>
+
+            <section id="saison-mystere-game" class="screen game-screen">
+                <h2>🍂 Saison Mystère</h2>
+                <div id="saison-mystere-content">
+                    <!-- Game content will be loaded here by saisonMystere.js -->
+                    <p>Chargement du jeu...</p>
+                </div>
+                <button class="btn-secondary back-to-home">Retour aux jeux</button>
+            </section>
+
+            <section id="sons-magiques-game" class="screen game-screen">
+                <h2>🎶 Les Sons Magiques</h2>
+                <div id="sons-magiques-content">
+                    <!-- Game content will be loaded here by sonsMagiques.js -->
+                    <p>Chargement du jeu...</p>
+                </div>
+                <button class="btn-secondary back-to-home">Retour aux jeux</button>
+            </section>
+
+            <section id="meteo-nature-game" class="screen game-screen">
+                <h2>☀️ Météo & Nature</h2>
+                <div id="meteo-nature-content">
+                    <!-- Game content will be loaded here by meteoNature.js -->
+                    <p>Chargement du jeu...</p>
+                </div>
+                <button class="btn-secondary back-to-home">Retour aux jeux</button>
+            </section>
+
+            <section id="boutique-screen" class="screen">
+                <h2>🛍️ Boutique d'Avatars</h2>
+                <p>Débloque de nouveaux accessoires avec tes pièces !</p>
+                <div id="boutique-items">
+                    <!-- Boutique items will be displayed here -->
+                </div>
+                <button class="btn-secondary back-to-home">Retour à l'accueil</button>
+            </section>
+
+            <!-- New Main Menu Screen for Mini-Games -->
+            <section id="mini-games-menu-screen" class="screen">
+                <h2>Mini-Jeux Éducatifs</h2>
+                <p>Choisis un mini-jeu pour apprendre en t'amusant !</p>
+                <div class="game-buttons mini-game-buttons">
+                    <button class="mini-game-btn" data-game-id="associeImageMot">🖼️✍️ Associe Image ↔ Mot</button>
+                    <button class="mini-game-btn" data-game-id="phraseATrous">✏️ Phrase à Trous</button>
+                    <button class="mini-game-btn" data-game-id="dicteeAudio">🎧 Dictée Audio</button>
+                    <button class="mini-game-btn" data-game-id="memory">🃏 Mémory</button>
+                    <button class="mini-game-btn" data-game-id="jeuDeCopie">📝 Jeu de Copie</button>
+                    <button class="mini-game-btn" data-game-id="motsCaches">🔍 Mots Cachés</button>
+                    <button class="mini-game-btn" data-game-id="relierColonnes">🔗 Relier les Colonnes</button>
+                    <button class="mini-game-btn" data-game-id="puzzleLettres">🔡 Puzzle de Lettres</n                    <button class="mini-game-btn" data-game-id="calendrierInteractif">📅 Calendrier Interactif</button>
+                    <button class="mini-game-btn" data-game-id="jeuDesIntrus">🚫 Jeu des Intrus</button>
+                    <button class="mini-game-btn" data-game-id="courseAuxEtoiles">⭐ Course aux Étoiles</button>
+                    <button class="mini-game-btn" data-game-id="miniHistoire">📖 Mini-Histoire à Compléter</button>
+                    <button class="mini-game-btn" data-game-id="dicteeVocale">🎙️ Dictée Vocale Personnalisée</button>
+                    <button class="mini-game-btn" data-game-id="phraseMagique">🌟 Phrase Magique Animée</button>
+                    <button class="mini-game-btn" data-game-id="modeRevision">🎓 Mode Révision / Examen</button>
+                </div>
+                <button class="btn-secondary back-to-home">Retour à l'accueil</button>
+            </section>
+
+            <!-- Containers for each new mini-game -->
+            <section id="associeImageMot-game" class="screen mini-game-screen">
+                <h2>🖼️✍️ Associe Image ↔ Mot</h2>
+                <div id="associeImageMot-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="phraseATrous-game" class="screen mini-game-screen">
+                <h2>✏️ Phrase à Trous</h2>
+                <div id="phraseATrous-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="dicteeAudio-game" class="screen mini-game-screen">
+                <h2>🎧 Dictée Audio</h2>
+                <div id="dicteeAudio-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="memory-game" class="screen mini-game-screen">
+                <h2>🃏 Mémory</h2>
+                <div id="memory-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="jeuDeCopie-game" class="screen mini-game-screen">
+                <h2>📝 Jeu de Copie</h2>
+                <div id="jeuDeCopie-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="motsCaches-game" class="screen mini-game-screen">
+                <h2>🔍 Mots Cachés</h2>
+                <div id="motsCaches-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="relierColonnes-game" class="screen mini-game-screen">
+                <h2>🔗 Relier les Colonnes</h2>
+                <div id="relierColonnes-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="puzzleLettres-game" class="screen mini-game-screen">
+                <h2>🔡 Puzzle de Lettres</h2>
+                <div id="puzzleLettres-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="calendrierInteractif-game" class="screen mini-game-screen">
+                <h2>📅 Calendrier Interactif</h2>
+                <div id="calendrierInteractif-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="jeuDesIntrus-game" class="screen mini-game-screen">
+                <h2>🚫 Jeu des Intrus</h2>
+                <div id="jeuDesIntrus-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="courseAuxEtoiles-game" class="screen mini-game-screen">
+                <h2>⭐ Course aux Étoiles</h2>
+                <div id="courseAuxEtoiles-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="miniHistoire-game" class="screen mini-game-screen">
+                <h2>📖 Mini-Histoire à Compléter</h2>
+                <div id="miniHistoire-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="dicteeVocale-game" class="screen mini-game-screen">
+                <h2>🎙️ Dictée Vocale Personnalisée</h2>
+                <div id="dicteeVocale-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="phraseMagique-game" class="screen mini-game-screen">
+                <h2>🌟 Phrase Magique Animée</h2>
+                <div id="phraseMagique-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+            <section id="modeRevision-game" class="screen mini-game-screen">
+                <h2>🎓 Mode Révision / Examen</h2>
+                <div id="modeRevision-content"></div>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="audioManager.js"></script>
+    <script src="saisonMystere.js"></script>
+    <script src="sonsMagiques.js"></script>
+    <script src="meteoNature.js"></script>
+    <script src="gameData.js"></script> <!-- New: Centralized game data -->
+    <script src="associeImageMot.js"></script> <!-- New: First mini-game -->
+    <script src="phraseATrous.js"></script> <!-- New: Second mini-game -->
+    <script src="dicteeAudio.js"></script> <!-- New: Third mini-game -->
+    <script src="memory.js"></script> <!-- New: Fourth mini-game -->
+    <script src="jeuDeCopie.js"></script> <!-- New: Fifth mini-game -->
+    <script src="motsCaches.js"></script> <!-- New: Sixth mini-game -->
+    <script src="relierColonnes.js"></script> <!-- New: Seventh mini-game -->
+    <script src="puzzleLettres.js"></script> <!-- New: Eighth mini-game -->
+    <!-- Add other mini-game scripts here as they are created -->
+</body>
+</html>
