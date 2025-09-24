@@ -1,115 +1,94 @@
-// jeuDeCopie.js - Logic for the "Jeu de Copie → Mémoire" mini-game
+// jeuDeCopie.js - Logic for the "Jeu de Copie" game
 
 const initJeuDeCopie = (gameContainer, gameData, setGameCompleted, showFeedback, addStars, addCoins, audioManager) => {
     console.log("jeuDeCopie.js: initJeuDeCopie called.");
-    let currentQuestionIndex = 0;
-    let correctAnswersCount = 0;
-    const questions = gameData.jeuDeCopie; // Get specific game data
 
-    let currentWord = '';
-    let step = 1; // 1: copy, 2: memory
+    const gameContent = gameContainer; // The div where game content will be rendered
+    const gameId = "jeuDeCopie";
+    const wordsToCopy = gameData;
 
-    function renderQuestion() {
-        if (currentQuestionIndex < questions.length) {
-            currentWord = questions[currentQuestionIndex].word;
-            step = 1; // Reset to copy step
-            gameContainer.innerHTML = `
-                <div class="jeu-de-copie-question">
-                    <p class="instruction">Étape 1: Copie le mot ci-dessous.</p>
-                    <p id="word-to-copy" class="word-display">${currentWord}</p>
-                    <input type="text" id="copy-input" placeholder="Copie le mot ici..." autocomplete="off">
-                    <button id="next-step-btn" class="btn-primary">Suivant</button>
+    let currentWordIndex = 0;
+    let score = 0;
+
+    function renderWord() {
+        if (currentWordIndex < wordsToCopy.length) {
+            const wordObj = wordsToCopy[currentWordIndex];
+            gameContent.innerHTML = `
+                <div class="jeu-de-copie-game">
+                    <p class="game-instructions">Observe le mot, puis écris-le de mémoire !</p>
+                    <div class="word-display">${wordObj.word}</div>
+                    <input type="text" class="copy-input" placeholder="Écris le mot ici...">
+                    <button class="btn-primary check-copy-btn">Vérifier</button>
+                    <div class="feedback-message"></div>
                 </div>
             `;
 
-            const copyInput = gameContainer.querySelector('#copy-input');
-            const nextStepBtn = gameContainer.querySelector('#next-step-btn');
+            const wordDisplay = gameContent.querySelector('.word-display');
+            const copyInput = gameContent.querySelector('.copy-input');
+            const checkBtn = gameContent.querySelector('.check-copy-btn');
+            const feedbackMessageDiv = gameContent.querySelector('.feedback-message');
 
-            nextStepBtn.addEventListener('click', () => {
-                if (step === 1) {
-                    // Check copy
-                    if (copyInput.value.trim().toLowerCase() === currentWord.toLowerCase()) {
-                        showFeedback(true, copyInput);
-                        step = 2;
-                        renderMemoryStep();
-                    } else {
-                        showFeedback(false, copyInput);
-                        // Allow retry or show correct answer
-                        copyInput.style.borderColor = '#F44336';
-                    }
+            // Step 1: Display word, then hide it
+            setTimeout(() => {
+                wordDisplay.style.opacity = '0';
+                copyInput.focus();
+            }, 2000); // Display for 2 seconds
+
+            checkBtn.addEventListener('click', () => {
+                const userAnswer = copyInput.value.trim().toLowerCase();
+                const correctAnswer = wordObj.word.toLowerCase();
+                const isCorrect = (userAnswer === correctAnswer);
+
+                showFeedback(isCorrect, copyInput);
+
+                if (isCorrect) {
+                    score++;
+                    addStars(1); // Award 1 star for each correct answer
+                    audioManager.playSound('correct');
+                    feedbackMessageDiv.textContent = wordObj.feedback;
+                    feedbackMessageDiv.style.color = 'var(--correct-color)';
+                } else {
+                    audioManager.playSound('incorrect');
+                    feedbackMessageDiv.textContent = `${wordObj.incorrectFeedback} Le mot était : ${wordObj.word}`;
+                    feedbackMessageDiv.style.color = 'var(--incorrect-color)';
                 }
-            });
 
-            copyInput.addEventListener('keypress', (event) => {
-                if (event.key === 'Enter') {
-                    nextStepBtn.click();
-                }
-            });
+                // Disable input and check button after answer
+                copyInput.disabled = true;
+                checkBtn.disabled = true;
 
-            copyInput.focus();
+                setTimeout(() => {
+                    currentWordIndex++;
+                    renderWord();
+                }, 2500); // Short delay to show feedback
+            });
 
         } else {
-            gameContainer.innerHTML = `
-                <h3>Félicitations ! Tu as terminé le Jeu de Copie !</h3>
-                <p>Tu as eu ${correctAnswersCount} bonnes réponses sur ${questions.length} !</p>
-                <p>Tu as gagné 🪙 20 pièces !</p>
-            `;
-            addCoins(20);
-            setGameCompleted('jeuDeCopie');
+            endGame();
         }
     }
 
-    function renderMemoryStep() {
-        gameContainer.innerHTML = `
-            <div class="jeu-de-copie-question">
-                <p class="instruction">Étape 2: Écris le mot de mémoire.</p>
-                <p id="word-to-copy" class="word-display hidden"></p> <!-- Word is hidden -->
-                <input type="text" id="memory-input" placeholder="Écris le mot de mémoire ici..." autocomplete="off">
-                <button id="check-memory-btn" class="btn-primary">Vérifier</button>
+    function endGame() {
+        gameContent.innerHTML = `
+            <div class="game-completion">
+                <h3>Jeu terminé !</h3>
+                <p>Ton score : ${score} sur ${wordsToCopy.length}</p>
+                <p>Tu es un champion de la copie !</p>
+                <button class="btn-primary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
             </div>
         `;
+        addCoins(20); // Award coins for completing the game
+        setGameCompleted(gameId); // Mark this specific game as completed
 
-        const memoryInput = gameContainer.querySelector('#memory-input');
-        const checkMemoryBtn = gameContainer.querySelector('#check-memory-btn');
-
-        checkMemoryBtn.addEventListener('click', () => {
-            const userAnswer = memoryInput.value.trim();
-            checkAnswer(userAnswer, currentWord, memoryInput);
+        // Re-attach event listener for the back button if it's dynamically created
+        gameContent.querySelector('.back-to-mini-games-menu').addEventListener('click', () => {
+            document.getElementById('mini-games-menu-screen').classList.add('active');
+            gameContainer.classList.remove('active');
         });
-
-        memoryInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                checkMemoryBtn.click();
-            }
-        });
-
-        memoryInput.focus();
-    }
-
-    function checkAnswer(userAnswer, correctAnswer, targetElement) {
-        const isCorrect = (userAnswer.toLowerCase() === correctAnswer.toLowerCase());
-        showFeedback(isCorrect, targetElement);
-
-        if (isCorrect) {
-            addStars(1);
-            correctAnswersCount++;
-        }
-
-        targetElement.style.borderColor = isCorrect ? '#4CAF50' : '#F44336';
-        targetElement.style.borderWidth = '3px';
-
-        // Disable input and button
-        targetElement.disabled = true;
-        gameContainer.querySelector('.btn-primary').disabled = true;
-
-        setTimeout(() => {
-            currentQuestionIndex++;
-            renderQuestion();
-        }, 2000);
     }
 
     // Initial render
-    renderQuestion();
+    renderWord();
 };
 
 // Expose to global scope

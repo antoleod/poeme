@@ -7,6 +7,11 @@ const audioManager = (() => {
     let recordedAudioHowl;
     let voices = [];
 
+    const commonSounds = {
+        correct: 'assets/audio/correct.mp3',
+        incorrect: 'assets/audio/incorrect.mp3'
+    };
+
     // Load voices when available
     if ('speechSynthesis' in window) {
         speechSynthesis.onvoiceschanged = () => {
@@ -17,8 +22,9 @@ const audioManager = (() => {
 
     // Function to play a sound (e.g., a poem verse)
     const playSound = (src) => {
+        const soundSrc = commonSounds[src] || src;
         const sound = new Howl({
-            src: [src],
+            src: [soundSrc],
             html5: true // Use HTML5 Audio to avoid decoding delays for short sounds
         });
         sound.play();

@@ -6,28 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const appContainer = document.getElementById('app-container');
     const homeScreen = document.getElementById('home-screen');
     const avatarSelectionScreen = document.getElementById('avatar-selection-screen');
-    const saisonMystereGame = document.getElementById('saison-mystere-game');
-    const sonsMagiquesGame = document.getElementById('sons-magiques-game');
-    const meteoNatureGame = document.getElementById('meteo-nature-game');
     const boutiqueScreen = document.getElementById('boutique-screen');
     const miniGamesMenuScreen = document.getElementById('mini-games-menu-screen');
-
-    // Mini-game screens
-    const associeImageMotGame = document.getElementById('associeImageMot-game');
-    const phraseATrousGame = document.getElementById('phraseATrous-game');
-    const dicteeAudioGame = document.getElementById('dicteeAudio-game');
-    const memoryGame = document.getElementById('memory-game');
-    const jeuDeCopieGame = document.getElementById('jeuDeCopie-game');
-    const motsCachesGame = document.getElementById('motsCaches-game');
-    const relierColonnesGame = document.getElementById('relierColonnes-game');
-    const puzzleLettresGame = document.getElementById('puzzleLettres-game');
-    const calendrierInteractifGame = document.getElementById('calendrierInteractif-game');
-    const jeuDesIntrusGame = document.getElementById('jeuDesIntrus-game');
-    const courseAuxEtoilesGame = document.getElementById('courseAuxEtoiles-game');
-    const miniHistoireGame = document.getElementById('miniHistoire-game');
-    const dicteeVocaleGame = document.getElementById('dicteeVocale-game');
-    const phraseMagiqueGame = document.getElementById('phraseMagique-game');
-    const modeRevisionGame = document.getElementById('modeRevision-game');
+    const dynamicGameScreen = document.getElementById('dynamic-game-screen'); // New dynamic game screen
 
     const avatarDisplay = document.getElementById('current-avatar');
     const starsCount = document.getElementById('stars-count');
@@ -41,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let userCoins = parseInt(localStorage.getItem('userCoins')) || 0;
     let unlockedItems = JSON.parse(localStorage.getItem('unlockedItems')) || {};
     let equippedItems = JSON.parse(localStorage.getItem('equippedItems')) || {};
-    let gameCompletion = JSON.parse(localStorage.getItem('gameCompletion')) || { saisonMystere: false, sonsMagiques: false, meteoNature: false };
+    let gameCompletion = JSON.parse(localStorage.getItem('gameCompletion')) || {};
     let specialTitleUnlocked = localStorage.getItem('specialTitleUnlocked') === 'true';
 
     const boutiqueItems = [
@@ -54,12 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     // --- Utility Functions ---
-    function showScreen(screenToShow) {
-        console.log(`script.js: Showing screen: ${screenToShow.id}`);
-        document.querySelectorAll('.screen').forEach(screen => {
-            screen.classList.remove('active');
-        });
-        screenToShow.classList.add('active');
+    // --- Utility Functions (now part of gameManager or global) ---
+    function showScreen(screenToShow) { // This global function will now just call gameManager.showScreen
+        gameManager.showScreen(screenToShow.id);
     }
 
     function updateSidebar() {
@@ -97,109 +75,157 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkGlobalCompletion() {
         console.log("script.js: Checking global completion.");
-        const allGamesCompleted = Object.values(gameCompletion).every(status => status === true);
-        if (allGamesCompleted && !specialTitleUnlocked) {
+        // This logic needs to be updated to check for completion of all levels across all games
+        // For now, it will remain as a placeholder or check a simplified condition.
+        // Example: if all games have at least one level completed.
+        const allGamesHaveAtLeastOneLevelCompleted = Object.keys(gameManager.registeredGames).every(gameId => {
+            // Check if any level for this game is marked as completed
+            return Object.keys(gameCompletion).some(key => key.startsWith(`${gameId}-level-`));
+        });
+
+        if (allGamesHaveAtLeastOneLevelCompleted && !specialTitleUnlocked) {
             specialTitleUnlocked = true;
             saveUserData();
             updateSidebar();
-            alert("Félicitations ! Tu as débloqué le titre spécial : Explorateur des Saisons !");
+            alert("Félicitations ! Tu as débloqué le titre especial : Explorateur des Saisons !");
         }
     }
 
-    // --- Reward System ---
-    window.addStars = (amount) => {
-        console.log(`script.js: Adding ${amount} stars.`);
-        userStars += amount;
-        saveUserData();
-        updateSidebar();
-        // Add animation for stars
-        anime({
-            targets: '#stars-count',
-            scale: [1, 1.3, 1],
-            duration: 300,
-            easing: 'easeInOutQuad'
-        });
-    };
+    // --- GameManager Object ---
+    const gameManager = {
+        registeredGames: {}, // Stores game classes
+        activeGameInstance: null,
+        audioManager: window.audioManager, // Assuming audioManager.js exists and is loaded
 
-    window.addCoins = (amount) => {
-        console.log(`script.js: Adding ${amount} coins.`);
-        userCoins += amount;
-        saveUserData();
-        updateSidebar();
-        // Add animation for coins
-        anime({
-            targets: '#coins-count',
-            scale: [1, 1.3, 1],
-            duration: 300,
-            easing: 'easeInOutQuad'
-        });
-    };
+        registerGame: function(gameId, gameClass) {
+            this.registeredGames[gameId] = gameClass;
+            console.log(`Game registered: ${gameId}`);
+        },
 
-    // --- Global Completion Setter ---
-    function setGameCompleted(gameName) {
-        console.log(`script.js: Game ${gameName} completed.`);
-        if (gameCompletion[gameName] !== undefined) {
-            gameCompletion[gameName] = true;
+        showScreen: function(screenId) {
+            console.log(`script.js: Showing screen: ${screenId}`);
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        },
+
+        startGame: function(gameId, level = 1) {
+            const GameClass = this.registeredGames[gameId];
+            if (GameClass) {
+                this.showScreen('dynamic-game-screen');
+                dynamicGameScreen.innerHTML = '';
+
+                this.activeGameInstance = new GameClass(
+                    dynamicGameScreen,
+                    this.gameData[gameId],
+                    this
+                );
+                this.activeGameInstance.initLevel(level);
+                console.log(`Game ${gameId} started at level ${level}.`);
+            } else {
+                console.error(`Game ${gameId} not found in registered games.`);
+            }
+        },
+
+        // --- Reward System (delegated from global scope) ---
+        addStars: function(amount) {
+            console.log(`script.js: Adding ${amount} stars.`);
+            userStars += amount;
+            saveUserData();
+            updateSidebar();
+            anime({
+                targets: '#stars-count',
+                scale: [1, 1.3, 1],
+                duration: 300,
+                easing: 'easeInOutQuad'
+            });
+        },
+
+        addCoins: function(amount) {
+            console.log(`script.js: Adding ${amount} coins.`);
+            userCoins += amount;
+            saveUserData();
+            updateSidebar();
+            anime({
+                targets: '#coins-count',
+                scale: [1, 1.3, 1],
+                duration: 300,
+                easing: 'easeInOutQuad'
+            });
+        },
+
+        setGameCompleted: function(completionId) { // completionId could be 'gameId-level-X'
+            console.log(`script.js: Completion ID ${completionId} marked as completed.`);
+            gameCompletion[completionId] = true;
             saveUserData();
             checkGlobalCompletion();
+        },
+
+        showFeedback: function(isCorrect, targetElement) {
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.style.position = 'absolute';
+            feedbackDiv.style.fontSize = '5em';
+            feedbackDiv.style.opacity = '0';
+            feedbackDiv.style.pointerEvents = 'none';
+            feedbackDiv.style.zIndex = '1000';
+
+            if (isCorrect) {
+                feedbackDiv.textContent = '✨';
+                anime({
+                    targets: feedbackDiv,
+                    translateY: [-50, -150],
+                    opacity: [1, 0],
+                    scale: [0.5, 1.5],
+                    duration: 1000,
+                    easing: 'easeOutExpo',
+                    complete: () => feedbackDiv.remove()
+                });
+            } else {
+                feedbackDiv.textContent = '❌';
+                anime({
+                    targets: feedbackDiv,
+                    scale: [1, 1.5, 1],
+                    opacity: [1, 0],
+                    duration: 500,
+                    easing: 'easeOutElastic',
+                    complete: () => feedbackDiv.remove()
+                });
+            }
+            if (targetElement) {
+                const rect = targetElement.getBoundingClientRect();
+                feedbackDiv.style.top = `${rect.top + rect.height / 2 - 50}px`;
+                feedbackDiv.style.left = `${rect.left + rect.width / 2 - 50}px`;
+            } else {
+                feedbackDiv.style.top = '50%';
+                feedbackDiv.style.left = '50%';
+                feedbackDiv.style.transform = 'translate(-50%, -50%)';
+            }
+            document.body.appendChild(feedbackDiv);
+        },
+
+        playSound: function(soundName) {
+            if (this.audioManager && typeof this.audioManager.playSound === 'function') {
+                this.audioManager.playSound(soundName);
+            } else {
+                console.warn(`Audio manager not available or playSound method missing for sound: ${soundName}`);
+            }
         }
+    };
+    window.gameManager = gameManager; // Make gameManager globally accessible
+    gameManager.gameData = window.gameData || {}; // Ensure gameData is available
+
+    // --- Utility Functions (now part of gameManager or global) ---
+    function showScreen(screenToShow) { // This global function will now just call gameManager.showScreen
+        gameManager.showScreen(screenToShow.id);
     }
-    window.setGameCompleted = setGameCompleted;
-
-    // --- Feedback Function ---
-    function showFeedback(isCorrect, targetElement) {
-        const feedbackDiv = document.createElement('div');
-        feedbackDiv.style.position = 'absolute';
-        feedbackDiv.style.fontSize = '5em';
-        feedbackDiv.style.opacity = '0';
-        feedbackDiv.style.pointerEvents = 'none';
-        feedbackDiv.style.zIndex = '1000';
-
-        if (isCorrect) {
-            feedbackDiv.textContent = '✨';
-            anime({
-                targets: feedbackDiv,
-                translateY: [-50, -150],
-                opacity: [1, 0],
-                scale: [0.5, 1.5],
-                duration: 1000,
-                easing: 'easeOutExpo',
-                complete: () => feedbackDiv.remove()
-            });
-        } else {
-            feedbackDiv.textContent = '❌';
-            anime({
-                targets: feedbackDiv,
-                scale: [1, 1.5, 1],
-                opacity: [1, 0],
-                duration: 500,
-                easing: 'easeOutElastic',
-                complete: () => feedbackDiv.remove()
-            });
-        }
-        // Position feedback relative to the target element or center of screen
-        if (targetElement) {
-            const rect = targetElement.getBoundingClientRect();
-            feedbackDiv.style.top = `${rect.top + rect.height / 2 - 50}px`;
-            feedbackDiv.style.left = `${rect.left + rect.width / 2 - 50}px`;
-        } else {
-            feedbackDiv.style.top = '50%';
-            feedbackDiv.style.left = '50%';
-            feedbackDiv.style.transform = 'translate(-50%, -50%)';
-        }
-        document.body.appendChild(feedbackDiv);
-
-        // Play sound feedback
-        if (isCorrect) {
-            // audioManager.playSound('correct'); // Assuming audioManager has this
-        } else {
-            // audioManager.playSound('incorrect'); // Assuming audioManager has this
-        }
-    }
-    window.showFeedback = showFeedback; // Make it globally accessible
 
     // --- Initial Setup ---
     console.log("script.js: Initial setup.");
+    console.log("window.gameData:", window.gameData);
+    console.log("gameManager.gameData:", gameManager.gameData);
+    console.log("window.gameData:", window.gameData);
+    console.log("gameManager.gameData:", gameManager.gameData);
     updateSidebar();
     showScreen(homeScreen); // Start at home screen
 
@@ -266,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Home Screen Buttons
     document.getElementById('avatar-selection-btn').addEventListener('click', () => {
         console.log("script.js: Avatar Selection button clicked.");
-        showScreen(avatarSelectionScreen);
+        gameManager.showScreen('avatar-selection-screen');
         // Pre-select current avatar and color
         document.querySelectorAll('.avatar-option').forEach(option => {
             option.classList.remove('selected');
@@ -279,72 +305,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('mini-games-btn').addEventListener('click', () => {
         console.log("script.js: Mini-Games button clicked.");
-        showScreen(miniGamesMenuScreen);
+        gameManager.showScreen('mini-games-menu-screen');
     });
 
     document.querySelectorAll('.game-btn').forEach(button => {
         button.addEventListener('click', (event) => {
             console.log(`script.js: Game button clicked: ${event.target.dataset.game}`);
-            const game = event.target.dataset.game;
-            if (game === 'saisonMystere') {
-                showScreen(saisonMystereGame);
-                if (typeof initSaisonMystere === 'function') {
-                    console.log("script.js: Calling initSaisonMystere.");
-                    initSaisonMystere(gameCompletion, setGameCompleted, showFeedback, addStars, addCoins); // Pass utility functions
-                } else {
-                    console.error('script.js: initSaisonMystere function not found.');
-                }
-            } else if (game === 'sonsMagiques') {
-                showScreen(sonsMagiquesGame);
-                if (typeof initSonsMagiques === 'function') {
-                    console.log("script.js: Calling initSonsMagiques.");
-                    initSonsMagiques(gameCompletion, setGameCompleted, showFeedback, addStars, addCoins);
-                } else {
-                    console.error('script.js: initSonsMagiques function not found.');
-                }
-            } else if (game === 'meteoNature') {
-                showScreen(meteoNatureGame);
-                if (typeof initMeteoNature === 'function') {
-                    console.log("script.js: Calling initMeteoNature.");
-                    initMeteoNature(gameCompletion, setGameCompleted, showFeedback, addStars, addCoins);
-                } else {
-                    console.error('script.js: initMeteoNature function not found.');
-                }
-            }
+            const gameId = event.target.dataset.game; // Use gameId for consistency
+            gameManager.startGame(gameId);
         });
     });
 
-    // Mini-Game Buttons
+    // Mini-Game Buttons - NOW USE gameManager.startGame
     document.querySelectorAll('.mini-game-btn').forEach(button => {
         button.addEventListener('click', (event) => {
             const gameId = event.target.dataset.gameId;
             console.log(`script.js: Mini-Game button clicked: ${gameId}`);
-            const gameScreen = document.getElementById(`${gameId}-game`);
-            if (gameScreen) {
-                showScreen(gameScreen);
-                // Dynamically call the init function for the specific game
-                const initFunctionName = `init${gameId.charAt(0).toUpperCase() + gameId.slice(1)}`;
-                if (typeof window[initFunctionName] === 'function') {
-                    console.log(`script.js: Calling ${initFunctionName}.`);
-                    window[initFunctionName](document.getElementById(`${gameId}-content`), gameData[gameId], setGameCompleted, showFeedback, addStars, addCoins, audioManager);
-                } else {
-                    console.error(`script.js: ${initFunctionName} function not found.`);
-                }
-            } else {
-                console.error(`script.js: Game screen for ${gameId} not found.`);
-            }
+            gameManager.startGame(gameId); // Start the game via gameManager
         });
     });
 
     // Sidebar Buttons
     document.getElementById('change-avatar-btn').addEventListener('click', () => {
         console.log("script.js: Change Avatar button clicked.");
-        showScreen(avatarSelectionScreen);
+        gameManager.showScreen('avatar-selection-screen');
     });
 
     document.getElementById('boutique-btn').addEventListener('click', () => {
         console.log("script.js: Boutique button clicked.");
-        showScreen(boutiqueScreen);
+        gameManager.showScreen('boutique-screen');
         renderBoutiqueItems();
     });
 
@@ -371,14 +360,14 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("script.js: Save Avatar button clicked.");
         saveUserData();
         updateSidebar();
-        showScreen(homeScreen);
+        gameManager.showScreen('home-screen');
     });
 
     // Back to Home/Games Buttons
     document.querySelectorAll('.back-to-home').forEach(button => {
         button.addEventListener('click', () => {
             console.log("script.js: Back to Home/Games button clicked.");
-            showScreen(homeScreen);
+            gameManager.showScreen('home-screen');
         });
     });
 
@@ -389,5 +378,10 @@ document.addEventListener('DOMContentLoaded', () => {
             showScreen(miniGamesMenuScreen);
         });
     });
+
+    // Register games
+    gameManager.registerGame('associeImageMot', AssocieImageMotGame);
+    gameManager.registerGame('phraseATrous', PhraseATrousGame);
+    gameManager.registerGame('dicteeAudio', DicteeAudioGame);
 
 });

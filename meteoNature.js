@@ -25,7 +25,13 @@ const initMeteoNature = (gameCompletion, setGameCompleted) => {
     let correctAnswersInLevel = 0;
     const questionsPerLevel = 2; // 2 questions per level for this game
     let currentLevel = 1;
-    const maxLevels = 5;
+    // Add more questions to expand levels
+    questions.push(
+        { type: "multiple_choice", question: "Que portons-nous souvent quand il fait frais?", options: ["Un manteau", "Un short", "Un chapeau de bain"], correctAnswer: "Un manteau" },
+        { type: "drag_drop", image: "🌨️", phrase: "Il neige en hiver.", correctAnswer: "neige" },
+        { type: "multiple_choice", question: "Quelle activité est commune en automne?", options: ["Cueillir des pommes", "Nager", "Faire du ski"], correctAnswer: "Cueillir des pommes" }
+    );
+    const maxLevels = Math.ceil(questions.length / questionsPerLevel);
 
     const gameDiv = document.createElement('div');
     gameDiv.className = 'meteo-nature-game-content';

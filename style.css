@@ -1,18 +1,50 @@
 /* General Styles */
+/* Merged theme variables (from user-provided enhanced palette) */
 :root {
-    --primary-color: #FF6F61; /* Warm Red/Orange */
-    --secondary-color: #FFC300; /* Sunny Yellow */
-    --accent-color: #6A057F; /* Deep Purple */
-    --background-color: #F8F8F8; /* Light Grey */
-    --text-color: #333333;
-    --sidebar-bg: #FFF3E0; /* Light Creamy Orange */
-    --game-bg: #E0F2F7; /* Light Blue for game areas */
-    --autumn-leaf: #D32F2F; /* Dark Red */
-    --autumn-orange: #F57C00; /* Deep Orange */
-    --autumn-yellow: #FFEB3B; /* Bright Yellow */
-    --border-radius-lg: 25px;
-    --border-radius-md: 15px;
-    --box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    /* Paleta de colores más vibrante y pastel */
+    --bg: #fcf8e8; /* Very light cream */
+    --bg2: #f5e6cc; /* Light beige */
+    --card: rgba(255, 255, 255, .95);
+    --cardHi: rgba(255, 255, 255, .9);
+    --ink: #5a5a5a; /* Slightly softer dark grey */
+    --muted: #a0a0a0; /* Softer muted grey */
+    --primary: #a890f0; /* Softer purple */
+    --primary-light: #c0a8f8; /* Lighter, more pastel purple */
+    --success: #8bc34a; /* Brighter, more cheerful green */
+    --warning: #ffca28; /* Brighter yellow/orange */
+    --danger: #ef5350; /* Keeping red for danger, but could be softened if needed */
+    --highlight: #ffeb3b; /* Brighter yellow highlight */
+    /* Espaciado y tipografía */
+    --space-unit: 1rem;
+    --font-heading: 'Fredoka', sans-serif;
+    --font-body: 'Nunito', sans-serif;
+    --font-size-base: clamp(0.8rem, 1vw + 0.5rem, 1rem);
+    --font-size-large: clamp(1.2rem, 1.5vw + 0.5rem, 1.5rem);
+    --font-size-xl: clamp(1.5rem, 2vw + 0.5rem, 2rem);
+    --font-size-xxl: clamp(2rem, 3vw + 1rem, 3rem);
+    /* Sombra y bordes */
+    --shadow-small: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 10px 15px rgba(0, 0, 0, 0.15);
+    --shadow-large: 0 20px 25px rgba(0, 0, 0, 0.2);
+    --border-radius-large: 1.5rem;
+    --border-radius-medium: 1rem;
+}
+
+/* Compatibility aliases for older variable names used in the stylesheet */
+:root {
+    --primary-color: var(--primary);
+    --secondary-color: var(--warning);
+    --accent-color: var(--primary);
+    --background-color: var(--bg);
+    --text-color: var(--ink);
+    --sidebar-bg: var(--card);
+    --game-bg: var(--bg2);
+    --autumn-leaf: #D32F2F;
+    --autumn-orange: #F57C00;
+    --autumn-yellow: #FFEB3B;
+    --border-radius-lg: var(--border-radius-large);
+    --border-radius-md: var(--border-radius-medium);
+    --box-shadow: var(--shadow-large);
 }
 
 * {
@@ -22,7 +54,7 @@
 }
 
 body {
-    font-family: 'Nunito', sans-serif;
+    font-family: var(--font-body, 'Nunito', sans-serif);
     background-color: var(--background-color);
     color: var(--text-color);
     display: flex;
@@ -1023,3 +1055,79 @@ body {
         font-size: 1.5em;
     }
 }
+/* --- Appended enhanced theme and animations (user-provided) --- */
+
+/* Base adjustments to integrate new variables with existing class names */
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1rem, 4vw, 2.5rem);
+  min-height: 100vh;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  line-height: 1.6;
+  font-size: var(--font-size-base);
+  transition: background-color 0.5s ease-in-out;
+}
+
+body.has-custom-background {
+  background: linear-gradient(160deg, var(--custom-bg-start, #fce4ec), var(--custom-bg-end, #f8bbd0));
+  color: var(--custom-text-color, var(--ink));
+}
+
+/* Decorative floating icons */
+#floatingDecor { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+.floating-decor__icon { position: absolute; font-size: clamp(1.6rem, 3vw, 2.6rem); opacity: 0.4; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.25)); }
+
+/* Level themed backgrounds */
+.body-level-1 { background: linear-gradient(180deg, #fce4ec 0%, #f8bbd0 45%, #f48fb1 100%); }
+.body-level-2 { background: linear-gradient(180deg, #e3f2fd 0%, #bbdefb 40%, #64b5f6 100%); }
+.body-level-3 { background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 45%, #81c784 100%); }
+.body-level-4 { background: linear-gradient(180deg, #fff3e0 0%, #ffe0b2 42%, #ffb74d 100%); }
+.body-level-5 { background: linear-gradient(180deg, #f3e5f5 0%, #e1bee7 42%, #ba68c8 100%); }
+.body-level-6 { background: linear-gradient(180deg, #e0f2f1 0%, #b2dfdb 40%, #4db6ac 100%); }
+.body-level-7 { background: linear-gradient(180deg, #f1f8e9 0%, #dcedc8 40%, #aed581 100%); }
+.body-level-8 { background: linear-gradient(180deg, #e1f5fe 0%, #b3e5fc 40%, #4fc3f7 100%); }
+.body-level-9 { background: linear-gradient(180deg, #fffde7 0%, #fff59d 42%, #fdd835 100%); }
+.body-level-10 { background: linear-gradient(180deg, #efebe9 0%, #d7ccc8 40%, #a1887f 100%); }
+.body-level-11 { background: linear-gradient(180deg, #fbe9e7 0%, #ffccbc 40%, #ff8a65 100%); }
+.body-level-12 { background: linear-gradient(180deg, #ede7f6 0%, #d1c4e9 40%, #9575cd 100%); }
+
+/* Header / Stage top */
+#stageTop { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1rem; max-width:900px; width:100%; padding:var(--space-unit); font-family:var(--font-heading); font-size:var(--font-size-large); color:var(--primary); position:relative; z-index:1; }
+#stageTop span { display:inline-flex; align-items:center; gap:0.5rem; padding:0.25rem 0.75rem; border-radius:9999px; background:var(--card); box-shadow:var(--shadow-small); }
+
+/* Topic buttons styled to be large and friendly */
+.topic-btn { font-family:var(--font-heading); padding:1rem 1.5rem; border-radius:1.5rem; border:none; background:var(--bg2); color:var(--primary); cursor:pointer; transition:all .25s ease-in-out; display:flex; flex-direction:column; align-items:center; gap:0.5rem; font-size:var(--font-size-large); box-shadow: -6px -6px 12px rgba(255,255,255,0.9), 6px 6px 12px rgba(0,0,0,0.25); }
+.topic-btn:hover { transform:translateY(-3px); box-shadow: -2px -2px 6px rgba(255,255,255,0.7), 6px 6px 12px rgba(0,0,0,0.25); }
+
+/* Options and cards tuned for focus and TDAH friendliness */
+.option { background:var(--bg2); border-radius:var(--border-radius-medium); padding:clamp(1rem,2.5vw,1.75rem); box-shadow:0 8px 20px rgba(148,102,255,0.2); min-height:clamp(72px,12vh,160px); }
+.option:hover { border-color:var(--primary-light); background:linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.75)); }
+
+/* Buttons and progress */
+.btn { font-family:var(--font-heading); font-size:var(--font-size-large); padding:0.75rem 2rem; border-radius:var(--border-radius-medium); }
+.audio-btn { background:var(--primary); }
+
+/* Progress tracker */
+.progress-tracker__fill { background: linear-gradient(135deg, rgba(171,71,188,0.9), rgba(48,63,159,0.9)); }
+
+/* Shop modal styles to match theme */
+.shop-modal__dialog { background: var(--cardHi); }
+
+/* Small helpers */
+.fx-pulse { animation: pulse 2s infinite ease-in-out; }
+
+/* Accessibility focus outline override */
+:focus { outline: 3px solid var(--highlight); outline-offset: 3px; }
+
+/* Ensure dynamic-game-screen displays when active via 'active' class (matches .screen.active above) */
+#dynamic-game-screen { display: none; }
+.screen.active#dynamic-game-screen, .screen#dynamic-game-screen.active { display: block; }
+
+/* End appended enhanced CSS */

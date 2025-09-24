@@ -1,113 +1,139 @@
-// memory.js - Logic for the "Mémory" mini-game
+// memory.js - Logic for the "Mémory" game
 
 const initMemory = (gameContainer, gameData, setGameCompleted, showFeedback, addStars, addCoins, audioManager) => {
     console.log("memory.js: initMemory called.");
-    let cards = [];
+
+    const gameContent = gameContainer; // The div where game content will be rendered
+    const gameId = "memory";
+    const cardPairs = gameData[gameId];
+
     let flippedCards = [];
-    let matchesFound = 0;
-    const memoryPairs = gameData.memory; // Get specific game data
+    let matchedPairs = 0;
+    let attempts = 0;
+    let lockBoard = false; // To prevent clicking more than two cards
 
-    function initializeGame() {
-        gameContainer.innerHTML = '';
-        cards = [];
-        flippedCards = [];
-        matchesFound = 0;
-
-        // Create pairs of cards (word and image)
-        let gameItems = [];
-        memoryPairs.forEach(pair => {
-            gameItems.push({ type: 'word', content: pair.word, matchId: pair.id });
-            gameItems.push({ type: 'image', content: pair.image, matchId: pair.id });
-        });
-
-        // Shuffle cards
-        gameItems.sort(() => Math.random() - 0.5);
-
-        const memoryGrid = document.createElement('div');
-        memoryGrid.className = 'memory-grid';
-        gameContainer.appendChild(memoryGrid);
-
-        gameItems.forEach((item, index) => {
-            const cardElement = document.createElement('div');
-            cardElement.classList.add('memory-card');
-            cardElement.dataset.index = index;
-            cardElement.dataset.matchId = item.matchId;
-            cardElement.dataset.type = item.type;
-
-            const cardInner = document.createElement('div');
-            cardInner.classList.add('memory-card-inner');
-
-            const cardFront = document.createElement('div');
-            cardFront.classList.add('memory-card-front');
-            cardFront.textContent = '?'; // Or a generic icon
-
-            const cardBack = document.createElement('div');
-            cardBack.classList.add('memory-card-back');
-            cardBack.textContent = item.content;
-
-            cardInner.appendChild(cardFront);
-            cardInner.appendChild(cardBack);
-            cardElement.appendChild(cardInner);
-            memoryGrid.appendChild(cardElement);
-
-            cardElement.addEventListener('click', () => flipCard(cardElement));
-            cards.push(cardElement);
-        });
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
     }
 
-    function flipCard(cardElement) {
-        if (flippedCards.length < 2 && !cardElement.classList.contains('flipped') && !cardElement.classList.contains('matched')) {
-            cardElement.classList.add('flipped');
-            flippedCards.push(cardElement);
+    function createBoard() {
+        gameContent.innerHTML = `
+            <div class="memory-game">
+                <p class="game-instructions">Trouve les paires d'images et de mots !</p>
+                <div class="memory-board"></div>
+                <p>Tentatives : <span id="attempts-count">0</span></p>
+            </div>
+        `;
+        const memoryBoard = gameContent.querySelector('.memory-board');
+        const attemptsCountSpan = gameContent.querySelector('#attempts-count');
 
-            if (flippedCards.length === 2) {
-                setTimeout(checkForMatch, 1000);
-            }
+        // Duplicate cards to create pairs and add a type (image or word)
+        const cards = [];
+        cardPairs.forEach(pair => {
+            cards.push({ id: pair.id, type: pair.type, content: pair.content, isFlipped: false, isMatched: false });
+        });
+
+        const shuffledCards = shuffle(cards);
+
+        shuffledCards.forEach(card => {
+            const cardElement = document.createElement('div');
+            cardElement.classList.add('memory-card');
+            cardElement.dataset.id = card.id;
+            cardElement.dataset.type = card.type;
+            cardElement.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">?</div>
+                    <div class="card-back">${card.content}</div>
+                </div>
+            `;
+            cardElement.addEventListener('click', () => flipCard(cardElement, card));
+            memoryBoard.appendChild(cardElement);
+        });
+
+        attemptsCountSpan.textContent = attempts;
+    }
+
+    function flipCard(cardElement, cardObject) {
+        if (lockBoard || cardObject.isFlipped || cardObject.isMatched) return;
+
+        cardObject.isFlipped = true;
+        cardElement.classList.add('flipped');
+        flippedCards.push({ element: cardElement, object: cardObject });
+
+        if (flippedCards.length === 2) {
+            attempts++;
+            gameContent.querySelector('#attempts-count').textContent = attempts;
+            lockBoard = true;
+            checkForMatch();
         }
     }
 
     function checkForMatch() {
         const [card1, card2] = flippedCards;
-        const isMatch = card1.dataset.matchId === card2.dataset.matchId;
+        const isMatch = (card1.object.id === card2.object.id && card1.object.type !== card2.object.type);
 
         if (isMatch) {
-            handleMatch(card1, card2);
+            disableCards();
+            showFeedback(true, card1.element); // Show feedback on one of the matched cards
+            addStars(2); // Award 2 stars for a match
+            audioManager.playSound('correct');
+            matchedPairs++;
+            if (matchedPairs === cardPairs.length / 2) { // Assuming cardPairs has image and word for each id
+                setTimeout(endGame, 1000);
+            }
         } else {
-            handleMismatch(card1, card2);
+            unflipCards();
+            showFeedback(false, card1.element); // Show feedback on one of the unmatched cards
+            audioManager.playSound('incorrect');
         }
-
-        flippedCards = [];
-        checkGameEnd();
     }
 
-    function handleMatch(card1, card2) {
-        card1.classList.add('matched');
-        card2.classList.add('matched');
-        showFeedback(true, card1); // Show feedback on one of the cards
-        addStars(1);
-        matchesFound++;
+    function disableCards() {
+        flippedCards[0].object.isMatched = true;
+        flippedCards[1].object.isMatched = true;
+        resetBoard();
     }
 
-    function handleMismatch(card1, card2) {
-        showFeedback(false, card1); // Show feedback on one of the cards
+    function unflipCards() {
         setTimeout(() => {
-            card1.classList.remove('flipped');
-            card2.classList.remove('flipped');
-        }, 500);
+            flippedCards[0].object.isFlipped = false;
+            flippedCards[1].object.isFlipped = false;
+            flippedCards[0].element.classList.remove('flipped');
+            flippedCards[1].element.classList.remove('flipped');
+            resetBoard();
+        }, 1000);
     }
 
-    function checkGameEnd() {
-        if (matchesFound === memoryPairs.length) {
-            gameContainer.innerHTML += `
-                <h3>Félicitations ! Tu as terminé le Mémory !</h3>
-                <p>Tu as gagné 🪙 30 pièces !</p>
-            `;
-            addCoins(30);
-            setGameCompleted('memory'); // Mark this specific game as completed
-        }
+    function resetBoard() {
+        flippedCards = [];
+        lockBoard = false;
     }
 
-    initializeGame();
+    function endGame() {
+        gameContent.innerHTML = `
+            <div class="game-completion">
+                <h3>Jeu terminé !</h3>
+                <p>Tu as trouvé toutes les paires en ${attempts} tentatives !</p>
+                <p>Excellent travail de mémorisation !</p>
+                <button class="btn-primary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </div>
+        `;
+        addCoins(30); // Award coins for completing the game
+        setGameCompleted(gameId); // Mark this specific game as completed
+
+        // Re-attach event listener for the back button if it's dynamically created
+        gameContent.querySelector('.back-to-mini-games-menu').addEventListener('click', () => {
+            document.getElementById('mini-games-menu-screen').classList.add('active');
+            gameContainer.classList.remove('active');
+        });
+    }
+
+    // Initial setup
+    createBoard();
 };
 
 // Expose to global scope

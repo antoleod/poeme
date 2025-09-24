@@ -1,157 +1,176 @@
-// motsCaches.js - Logic for the "Mots Cachés" mini-game
+// motsCaches.js - Logic for the "Mots Cachés" (Wordsearch) game
 
 const initMotsCaches = (gameContainer, gameData, setGameCompleted, showFeedback, addStars, addCoins, audioManager) => {
     console.log("motsCaches.js: initMotsCaches called.");
-    let currentLevel = 0;
-    let wordsFound = 0;
-    const levels = gameData.motsCaches; // Get specific game data
 
-    let selectedCells = [];
+    const gameContent = gameContainer; // The div where game content will be rendered
+    const gameId = "motsCaches";
+    const { grid, words } = gameData;
+
     let foundWords = [];
+    let selectedLetters = [];
+    let isDragging = false;
 
-    function renderLevel() {
-        if (currentLevel < levels.length) {
-            const level = levels[currentLevel];
-            const gridSize = level.grid.length;
-            foundWords = []; // Reset found words for new level
-            wordsFound = 0;
-
-            gameContainer.innerHTML = `
-                <div class="mots-caches-game">
-                    <p class="instruction">Trouve les mots cachés : ${level.wordsToFind.join(', ')}</p>
-                    <div id="wordsearch-grid" class="wordsearch-grid"></div>
-                    <div id="found-words-display" class="found-words-display"></div>
+    function renderGame() {
+        gameContent.innerHTML = `
+            <div class="mots-caches-game">
+                <p class="game-instructions">Trouve tous les mots cachés dans la grille !</p>
+                <div class="wordsearch-grid"></div>
+                <div class="words-to-find">
+                    <h3>Mots à trouver :</h3>
+                    <ul id="word-list"></ul>
                 </div>
-            `;
+            </div>
+        `;
 
-            const gridElement = gameContainer.querySelector('#wordsearch-grid');
-            gridElement.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
+        const wordsearchGrid = gameContent.querySelector('.wordsearch-grid');
+        const wordList = gameContent.querySelector('#word-list');
 
-            level.grid.forEach((row, rowIndex) => {
-                row.forEach((letter, colIndex) => {
-                    const cell = document.createElement('div');
-                    cell.classList.add('grid-cell');
-                    cell.textContent = letter;
-                    cell.dataset.row = rowIndex;
-                    cell.dataset.col = colIndex;
-                    cell.addEventListener('mousedown', startSelection);
-                    cell.addEventListener('mouseenter', continueSelection);
-                    cell.addEventListener('mouseup', endSelection);
-                    gridElement.appendChild(cell);
-                });
+        // Render grid
+        grid.forEach((row, rowIndex) => {
+            const rowElement = document.createElement('div');
+            rowElement.classList.add('grid-row');
+            row.forEach((letter, colIndex) => {
+                const letterElement = document.createElement('span');
+                letterElement.classList.add('grid-letter');
+                letterElement.textContent = letter;
+                letterElement.dataset.row = rowIndex;
+                letterElement.dataset.col = colIndex;
+                rowElement.appendChild(letterElement);
             });
+            wordsearchGrid.appendChild(rowElement);
+        });
 
-            renderFoundWordsDisplay();
+        // Render words to find
+        words.forEach(word => {
+            const listItem = document.createElement('li');
+            listItem.textContent = word;
+            listItem.dataset.word = word.toLowerCase();
+            wordList.appendChild(listItem);
+        });
 
-        } else {
-            gameContainer.innerHTML = `
-                <h3>Félicitations ! Tu as terminé tous les Mots Cachés !</h3>
-                <p>Tu as gagné 🪙 30 pièces !</p>
-            `;
-            addCoins(30);
-            setGameCompleted('motsCaches');
-        }
+        // Add event listeners for selection
+        wordsearchGrid.addEventListener('mousedown', startSelection);
+        wordsearchGrid.addEventListener('mouseup', endSelection);
+        wordsearchGrid.addEventListener('mouseover', duringSelection);
+
+        // Handle touch events for mobile
+        wordsearchGrid.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent scrolling
+            startSelection(e.touches[0]);
+        });
+        wordsearchGrid.addEventListener('touchend', endSelection);
+        wordsearchGrid.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent scrolling
+            duringSelection(e.touches[0]);
+        });
     }
 
-    function renderFoundWordsDisplay() {
-        const display = gameContainer.querySelector('#found-words-display');
-        display.innerHTML = 'Mots trouvés : ';
-        if (foundWords.length > 0) {
-            display.innerHTML += foundWords.map(word => `<span class="found-word">${word}</span>`).join(', ');
-        } else {
-            display.innerHTML += 'Aucun';
-        }
+    function startSelection(e) {
+        isDragging = true;
+        selectedLetters = [];
+        clearSelection();
+        addLetterToSelection(e);
     }
 
-    function startSelection(event) {
-        if (event.button !== 0) return; // Only left click
-        selectedCells = [event.target];
-        event.target.classList.add('selected');
-        gameContainer.addEventListener('mousemove', continueSelection);
-        gameContainer.addEventListener('mouseup', endSelection);
+    function duringSelection(e) {
+        if (!isDragging) return;
+        addLetterToSelection(e);
     }
 
-    function continueSelection(event) {
-        if (event.buttons === 1 && event.target.classList.contains('grid-cell')) {
-            const lastCell = selectedCells[selectedCells.length - 1];
-            if (event.target !== lastCell) {
-                // Basic logic to add cells in a straight line (horizontal, vertical, diagonal)
-                const newCell = event.target;
-                const newRow = parseInt(newCell.dataset.row);
-                const newCol = parseInt(newCell.dataset.col);
-                const lastRow = parseInt(lastCell.dataset.row);
-                const lastCol = parseInt(lastCell.dataset.col);
+    function endSelection() {
+        isDragging = false;
+        checkSelectedWord();
+    }
 
-                const dRow = Math.abs(newRow - lastRow);
-                const dCol = Math.abs(newCol - lastCol);
+    function addLetterToSelection(e) {
+        const target = document.elementFromPoint(e.clientX, e.clientY);
+        if (target && target.classList.contains('grid-letter')) {
+            const row = parseInt(target.dataset.row);
+            const col = parseInt(target.dataset.col);
+            const letterObj = { element: target, letter: target.textContent, row, col };
 
-                // Only allow straight lines or diagonals
-                if (dRow === 0 || dCol === 0 || dRow === dCol) {
-                    // Clear previous selection if not contiguous
-                    if (selectedCells.length > 1 && !isContiguous(lastCell, newCell)) {
-                        selectedCells.forEach(cell => cell.classList.remove('selected'));
-                        selectedCells = [lastCell];
-                    }
-                    selectedCells.push(newCell);
-                    newCell.classList.add('selected');
+            // Only add if not already in selection and is adjacent to the last selected letter
+            if (selectedLetters.length === 0 || !selectedLetters.some(l => l.element === target)) {
+                if (selectedLetters.length > 0) {
+                    const lastLetter = selectedLetters[selectedLetters.length - 1];
+                    const isAdjacent = (Math.abs(lastLetter.row - row) <= 1 && Math.abs(lastLetter.col - col) <= 1);
+                    if (!isAdjacent) return; // Must be adjacent
                 }
+                selectedLetters.push(letterObj);
+                target.classList.add('selected');
             }
         }
     }
 
-    function isContiguous(cell1, cell2) {
-        const r1 = parseInt(cell1.dataset.row);
-        const c1 = parseInt(cell1.dataset.col);
-        const r2 = parseInt(cell2.dataset.row);
-        const c2 = parseInt(cell2.dataset.col);
-        return Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1;
+    function clearSelection() {
+        gameContent.querySelectorAll('.grid-letter.selected').forEach(el => {
+            el.classList.remove('selected');
+        });
+        selectedLetters = [];
     }
 
-    function endSelection() {
-        gameContainer.removeEventListener('mousemove', continueSelection);
-        gameContainer.removeEventListener('mouseup', endSelection);
+    function checkSelectedWord() {
+        if (selectedLetters.length === 0) return;
 
-        const selectedWord = selectedCells.map(cell => cell.textContent).join('').toUpperCase();
-        const reversedSelectedWord = selectedCells.map(cell => cell.textContent).reverse().join('').toUpperCase();
+        const formedWord = selectedLetters.map(l => l.letter).join('').toLowerCase();
+        const reversedWord = selectedLetters.map(l => l.letter).reverse().join('').toLowerCase();
 
-        const level = levels[currentLevel];
         let found = false;
+        let correctWord = "";
 
-        // Check if the selected word (or its reverse) is in the list of words to find
-        for (let i = 0; i < level.wordsToFind.length; i++) {
-            const wordToFind = level.wordsToFind[i].toUpperCase();
-            if (selectedWord === wordToFind || reversedSelectedWord === wordToFind) {
-                if (!foundWords.includes(wordToFind)) {
-                    foundWords.push(wordToFind);
-                    selectedCells.forEach(cell => cell.classList.add('found'));
-                    showFeedback(true, selectedCells[0]);
-                    addStars(1);
-                    wordsFound++;
-                    renderFoundWordsDisplay();
+        for (const word of words) {
+            if (word.toLowerCase() === formedWord || word.toLowerCase() === reversedWord) {
+                if (!foundWords.includes(word.toLowerCase())) {
                     found = true;
+                    correctWord = word;
                     break;
                 }
             }
         }
 
-        if (!found) {
-            showFeedback(false, selectedCells[0]);
-        }
+        if (found) {
+            foundWords.push(correctWord.toLowerCase());
+            selectedLetters.forEach(l => l.element.classList.add('found'));
+            const listItem = gameContent.querySelector(`li[data-word="${correctWord.toLowerCase()}"]`);
+            if (listItem) listItem.classList.add('found');
 
-        // Clear selection styles
-        selectedCells.forEach(cell => cell.classList.remove('selected'));
-        selectedCells = [];
+            showFeedback(true, selectedLetters[0].element); // Feedback on first letter
+            addStars(5); // Award stars for finding a word
+            audioManager.playSound('correct');
 
-        if (wordsFound === level.wordsToFind.length) {
-            setTimeout(() => {
-                currentLevel++;
-                renderLevel();
-            }, 2000);
+            if (foundWords.length === words.length) {
+                setTimeout(endGame, 1500);
+            }
+        } else {
+            showFeedback(false, selectedLetters[0].element); // Feedback on first letter
+            audioManager.playSound('incorrect');
+            clearSelection(); // Clear selection if incorrect
         }
+        selectedLetters = []; // Clear selection after checking
     }
 
-    // Initial render
-    renderLevel();
+    function endGame() {
+        gameContent.innerHTML = `
+            <div class="game-completion">
+                <h3>Jeu terminé !</h3>
+                <p>Tu as trouvé tous les mots cachés !</p>
+                <p>Félicitations, détective des mots !</p>
+                <button class="btn-primary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </div>
+        `;
+        addCoins(40); // Award coins for completing the game
+        setGameCompleted(gameId); // Mark this specific game as completed
+
+        // Re-attach event listener for the back button if it's dynamically created
+        gameContent.querySelector('.back-to-mini-games-menu').addEventListener('click', () => {
+            document.getElementById('mini-games-menu-screen').classList.add('active');
+            gameContainer.classList.remove('active');
+        });
+    }
+
+    // Initial setup
+    renderGame();
 };
 
 // Expose to global scope

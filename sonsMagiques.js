@@ -36,7 +36,14 @@ const initSonsMagiques = (gameCompletion, setGameCompleted) => {
     let correctAnswersInLevel = 0;
     const questionsPerLevel = 3;
     let currentLevel = 1;
-    const maxLevels = 5;
+    // Expand question bank so there are more levels; compute maxLevels dynamically
+    // Add a few extra example questions
+    questions.push(
+        { sound: "OU", image: "🍽️", partialWord: "ass_ette", correctAnswer: "assiette", audioSrc: "path/to/assiette.mp3" },
+        { sound: "ON", image: "🌳", partialWord: "arb_", correctAnswer: "arbre", audioSrc: "path/to/arbre.mp3" },
+        { sound: "IN", image: "☕", partialWord: "t_s", correctAnswer: "tasse", audioSrc: "path/to/tasse.mp3" }
+    );
+    const maxLevels = Math.ceil(questions.length / questionsPerLevel);
 
     const gameDiv = document.createElement('div');
     gameDiv.className = 'sons-magiques-game-content';

@@ -1,162 +1,134 @@
-// relierColonnes.js - Logic for the "Relier les Colonnes" mini-game
+// relierColonnes.js - Logic for the "Relier les Colonnes" game
 
 const initRelierColonnes = (gameContainer, gameData, setGameCompleted, showFeedback, addStars, addCoins, audioManager) => {
     console.log("relierColonnes.js: initRelierColonnes called.");
-    let currentLevel = 0;
-    let correctMatches = 0;
-    const levels = gameData.relierColonnes; // Get specific game data
 
-    let selectedItem = null;
-    let lines = [];
-    let svgCanvas;
+    const gameContent = gameContainer; // The div where game content will be rendered
+    const gameId = "relierColonnes";
+    const pairs = gameData;
 
-    function renderLevel() {
-        if (currentLevel < levels.length) {
-            const level = levels[currentLevel];
-            correctMatches = 0;
-            lines = [];
+    let selectedElements = [];
+    let matchedPairsCount = 0;
 
-            // Shuffle the right column to ensure it's not in order
-            const shuffledCursiveWords = [...level.cursiveWords].sort(() => Math.random() - 0.5);
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
 
-            gameContainer.innerHTML = `
-                <div class="relier-colonnes-game">
-                    <p class="instruction">Relie le mot en script avec le mot en cursive !</p>
-                    <div class="columns-container">
-                        <div id="script-column" class="column script-column"></div>
-                        <div id="cursive-column" class="column cursive-column"></div>
-                        <svg id="lines-svg"></svg>
-                    </div>
-                    <button id="check-matches-btn" class="btn-primary">Vérifier les paires</button>
+    function renderGame() {
+        gameContent.innerHTML = `
+            <div class="relier-colonnes-game">
+                <p class="game-instructions">Relie le mot en script avec le mot en cursive !</p>
+                <div class="columns-container">
+                    <div class="column script-column"></div>
+                    <div class="column cursive-column"></div>
                 </div>
-            `;
+            </div>
+        `;
 
-            const scriptColumn = gameContainer.querySelector('#script-column');
-            const cursiveColumn = gameContainer.querySelector('#cursive-column');
-            svgCanvas = gameContainer.querySelector('#lines-svg');
-            const checkMatchesBtn = gameContainer.querySelector('#check-matches-btn');
+        const scriptColumn = gameContent.querySelector('.script-column');
+        const cursiveColumn = gameContent.querySelector('.cursive-column');
 
-            level.scriptWords.forEach((word, index) => {
-                const div = document.createElement('div');
-                div.classList.add('word-item', 'script');
-                div.textContent = word;
-                div.dataset.word = word;
-                div.dataset.index = index;
-                div.addEventListener('click', selectItem);
-                scriptColumn.appendChild(div);
-            });
+        const scriptWords = shuffle(pairs.map(p => ({ type: 'script', value: p.script, match: p.cursive })));
+        const cursiveWords = shuffle(pairs.map(p => ({ type: 'cursive', value: p.cursive, match: p.script })));
 
-            shuffledCursiveWords.forEach((word, index) => {
-                const div = document.createElement('div');
-                div.classList.add('word-item', 'cursive');
-                div.textContent = word;
-                div.dataset.word = word;
-                div.dataset.index = level.cursiveWords.indexOf(word); // Store original index for matching
-                div.addEventListener('click', selectItem);
-                cursiveColumn.appendChild(div);
-            });
+        scriptWords.forEach(word => {
+            const wordElement = document.createElement('div');
+            wordElement.classList.add('column-item', 'script-item');
+            wordElement.textContent = word.value;
+            wordElement.dataset.type = word.type;
+            wordElement.dataset.match = word.match;
+            wordElement.addEventListener('click', () => selectItem(wordElement));
+            scriptColumn.appendChild(wordElement);
+        });
 
-            checkMatchesBtn.addEventListener('click', checkMatches);
+        cursiveWords.forEach(word => {
+            const wordElement = document.createElement('div');
+            wordElement.classList.add('column-item', 'cursive-item');
+            wordElement.textContent = word.value;
+            wordElement.dataset.type = word.type;
+            wordElement.dataset.match = word.match;
+            wordElement.addEventListener('click', () => selectItem(wordElement));
+            cursiveColumn.appendChild(wordElement);
+        });
+    }
 
+    function selectItem(element) {
+        if (element.classList.contains('matched')) return; // Already matched
+
+        element.classList.toggle('selected');
+
+        if (element.classList.contains('selected')) {
+            selectedElements.push(element);
         } else {
-            gameContainer.innerHTML = `
-                <h3>Félicitations ! Tu as terminé tous les jeux de Relier les Colonnes !</h3>
-                <p>Tu as gagné 🪙 30 pièces !</p>
-            `;
-            addCoins(30);
-            setGameCompleted('relierColonnes');
+            selectedElements = selectedElements.filter(el => el !== element);
+        }
+
+        if (selectedElements.length === 2) {
+            checkMatch();
+        } else if (selectedElements.length > 2) {
+            // If more than two are selected, deselect the oldest one
+            selectedElements[0].classList.remove('selected');
+            selectedElements.shift();
         }
     }
 
-    function selectItem(event) {
-        const clickedItem = event.target;
+    function checkMatch() {
+        const [el1, el2] = selectedElements;
 
-        if (clickedItem.classList.contains('matched')) return; // Cannot re-select matched items
+        // Ensure one is script and one is cursive
+        const isCorrectTypePair = (el1.dataset.type !== el2.dataset.type);
 
-        if (selectedItem === null) {
-            // First item selected
-            selectedItem = clickedItem;
-            selectedItem.classList.add('selected');
-        } else if (selectedItem === clickedItem) {
-            // Deselect if clicked again
-            selectedItem.classList.remove('selected');
-            selectedItem = null;
-        } else {
-            // Second item selected, attempt to match
-            if (selectedItem.classList.contains('script') && clickedItem.classList.contains('cursive')) {
-                attemptMatch(selectedItem, clickedItem);
-            } else if (selectedItem.classList.contains('cursive') && clickedItem.classList.contains('script')) {
-                attemptMatch(clickedItem, selectedItem); // Ensure script is always first arg
-            } else {
-                // Both are same type, deselect first and select new one
-                selectedItem.classList.remove('selected');
-                selectedItem = clickedItem;
-                selectedItem.classList.add('selected');
+        // Check if they are matching pairs
+        const isMatch = (el1.dataset.match === el2.textContent && el2.dataset.match === el1.textContent);
+
+        if (isCorrectTypePair && isMatch) {
+            el1.classList.add('matched');
+            el2.classList.add('matched');
+            showFeedback(true, el1); // Show feedback on one of the matched elements
+            addStars(3); // Award stars for a match
+            audioManager.playSound('correct');
+            matchedPairsCount++;
+
+            if (matchedPairsCount === pairs.length) {
+                setTimeout(endGame, 1000);
             }
-        }
-    }
-
-    function attemptMatch(scriptItem, cursiveItem) {
-        if (scriptItem.dataset.word.toLowerCase() === cursiveItem.dataset.word.toLowerCase()) {
-            // Match found
-            scriptItem.classList.add('matched');
-            cursiveItem.classList.add('matched');
-            scriptItem.classList.remove('selected');
-            cursiveItem.classList.remove('selected');
-
-            drawLine(scriptItem, cursiveItem, '#4CAF50'); // Green line for correct
-            showFeedback(true, scriptItem);
-            addStars(1);
-            correctMatches++;
         } else {
-            // Mismatch
-            drawLine(scriptItem, cursiveItem, '#F44336'); // Red line for incorrect
-            showFeedback(false, scriptItem);
-            setTimeout(() => {
-                // Remove incorrect line and deselect
-                lines.pop().remove();
-                scriptItem.classList.remove('selected');
-                cursiveItem.classList.remove('selected');
-            }, 1000);
+            showFeedback(false, el1); // Show feedback on one of the unmatched elements
+            audioManager.playSound('incorrect');
         }
-        selectedItem = null;
+
+        // Clear selection after checking
+        setTimeout(() => {
+            selectedElements.forEach(el => el.classList.remove('selected'));
+            selectedElements = [];
+        }, 500);
     }
 
-    function drawLine(item1, item2, color) {
-        const rect1 = item1.getBoundingClientRect();
-        const rect2 = item2.getBoundingClientRect();
-        const svgRect = svgCanvas.getBoundingClientRect();
+    function endGame() {
+        gameContent.innerHTML = `
+            <div class="game-completion">
+                <h3>Jeu terminé !</h3>
+                <p>Tu as relié toutes les colonnes !</p>
+                <p>Félicitations pour ta maîtrise des écritures !</p>
+                <button class="btn-primary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </div>
+        `;
+        addCoins(30); // Award coins for completing the game
+        setGameCompleted(gameId); // Mark this specific game as completed
 
-        const x1 = rect1.right - svgRect.left;
-        const y1 = rect1.top + rect1.height / 2 - svgRect.top;
-        const x2 = rect2.left - svgRect.left;
-        const y2 = rect2.top + rect2.height / 2 - svgRect.top;
-
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', x1);
-        line.setAttribute('y1', y1);
-        line.setAttribute('x2', x2);
-        line.setAttribute('y2', y2);
-        line.setAttribute('stroke', color);
-        line.setAttribute('stroke-width', 3);
-        svgCanvas.appendChild(line);
-        lines.push(line);
+        // Re-attach event listener for the back button if it's dynamically created
+        gameContent.querySelector('.back-to-mini-games-menu').addEventListener('click', () => {
+            document.getElementById('mini-games-menu-screen').classList.add('active');
+            gameContainer.classList.remove('active');
+        });
     }
 
-    function checkMatches() {
-        const level = levels[currentLevel];
-        if (correctMatches === level.scriptWords.length) {
-            setTimeout(() => {
-                currentLevel++;
-                renderLevel();
-            }, 1500);
-        } else {
-            alert("Il reste des paires à trouver !");
-        }
-    }
-
-    // Initial render
-    renderLevel();
+    // Initial setup
+    renderGame();
 };
 
 // Expose to global scope

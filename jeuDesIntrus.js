@@ -1,46 +1,54 @@
-// calendrierInteractif.js - Logic for the "Calendrier Interactif" game
+// jeuDesIntrus.js - Logic for the "Jeu des Intrus" game
 
-const initCalendrierInteractif = (gameContainer, gameData, setGameCompleted, showFeedback, addStars, addCoins, audioManager) => {
-    console.log("calendrierInteractif.js: initCalendrierInteractif called.");
+const initJeuDesIntrus = (gameContainer, gameData, setGameCompleted, showFeedback, addStars, addCoins, audioManager) => {
+    console.log("jeuDesIntrus.js: initJeuDesIntrus called.");
 
     const gameContent = gameContainer; // The div where game content will be rendered
-    const gameId = "calendrierInteractif";
+    const gameId = "jeuDesIntrus";
     const questions = gameData;
 
     let currentQuestionIndex = 0;
     let score = 0;
 
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
     function renderQuestion() {
         if (currentQuestionIndex < questions.length) {
             const question = questions[currentQuestionIndex];
             gameContent.innerHTML = `
-                <div class="calendrier-interactif-game">
-                    <p class="game-instructions">${question.question}</p>
-                    <div class="options-container"></div>
+                <div class="jeu-des-intrus-game">
+                    <p class="game-instructions">Clique sur le mot qui n'a PAS le son ${question.sound} !</p>
+                    <div class="words-container"></div>
                     <div class="feedback-message"></div>
                 </div>
             `;
 
-            const optionsContainer = gameContent.querySelector('.options-container');
+            const wordsContainer = gameContent.querySelector('.words-container');
             const feedbackMessageDiv = gameContent.querySelector('.feedback-message');
 
-            // Shuffle options
-            const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
+            // Shuffle words
+            const shuffledWords = shuffleArray([...question.words]);
 
-            shuffledOptions.forEach(option => {
+            shuffledWords.forEach(word => {
                 const button = document.createElement('button');
                 button.classList.add('btn-option');
-                button.textContent = option;
-                button.addEventListener('click', () => checkAnswer(option, question.correct, button, question.feedback, question.incorrectFeedback));
-                optionsContainer.appendChild(button);
+                button.textContent = word;
+                button.addEventListener('click', () => checkAnswer(word, question.intruder, button, question.feedback, question.incorrectFeedback));
+                wordsContainer.appendChild(button);
             });
         } else {
             endGame();
         }
     }
 
-    function checkAnswer(selectedOption, correctAnswer, buttonElement, feedbackText, incorrectFeedbackText) {
-        const isCorrect = (selectedOption === correctAnswer);
+    function checkAnswer(selectedWord, intruderWord, buttonElement, feedbackText, incorrectFeedbackText) {
+        const isCorrect = (selectedWord === intruderWord);
         showFeedback(isCorrect, buttonElement);
         const feedbackMessageDiv = gameContent.querySelector('.feedback-message');
 
@@ -52,7 +60,7 @@ const initCalendrierInteractif = (gameContainer, gameData, setGameCompleted, sho
             feedbackMessageDiv.style.color = 'var(--correct-color)';
         } else {
             audioManager.playSound('incorrect');
-            feedbackMessageDiv.textContent = `${incorrectFeedbackText} La bonne réponse était : ${correctAnswer}`;
+            feedbackMessageDiv.textContent = `${incorrectFeedbackText} L'intrus était : ${intruderWord}`;
             feedbackMessageDiv.style.color = 'var(--incorrect-color)';
         }
 
@@ -70,7 +78,7 @@ const initCalendrierInteractif = (gameContainer, gameData, setGameCompleted, sho
             <div class="game-completion">
                 <h3>Jeu terminé !</h3>
                 <p>Ton score : ${score} sur ${questions.length}</p>
-                <p>Tu es un expert du calendrier !</p>
+                <p>Tu as démasqué tous les intrus !</p>
                 <button class="btn-primary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
             </div>
         `;
@@ -89,4 +97,4 @@ const initCalendrierInteractif = (gameContainer, gameData, setGameCompleted, sho
 };
 
 // Expose to global scope
-window.initCalendrierInteractif = initCalendrierInteractif;
+window.initJeuDesIntrus = initJeuDesIntrus;

@@ -1,6 +1,6 @@
 // saisonMystere.js - Logic for the "Saison Mystère" game
 
-const initSaisonMystere = (gameCompletion, setGameCompleted) => {
+const initSaisonMystere = (gameCompletion, setGameCompleted, showFeedback, addStars, addCoins) => {
     console.log("saisonMystere.js: initSaisonMystere called.");
     const gameContainer = document.getElementById('saison-mystere-content');
     if (!gameContainer) {
@@ -30,15 +30,18 @@ const initSaisonMystere = (gameCompletion, setGameCompleted) => {
     ];
 
     let currentLevel = 0;
-    const maxLevels = 5; // Now 5 levels for this game
-
+    // Expand to more levels by adding a few lightweight extra modes
     const gameModes = [
         { name: "Affichage du Poème", setup: setupPoemDisplay },
         { name: "Puzzle du Poème", setup: setupPoemPuzzle },
         { name: "Quiz Vrai/Faux", setup: setupTrueFalseQuiz },
         { name: "Écoute & Trouve", setup: setupListenAndFind },
-        { name: "Complète la Rime", setup: setupCompleteTheRhyme }
+        { name: "Complète la Rime", setup: setupCompleteTheRhyme },
+        { name: "Affichage du Poème (Rapide)", setup: setupPoemDisplayShort },
+        { name: "Mini-Puzzle", setup: setupMiniPoemPuzzle },
+        { name: "Mini-Quiz Rapide", setup: setupQuickQuiz }
     ];
+    const maxLevels = gameModes.length; // adapt to number of modes
 
     function loadLevel() {
         console.log(`saisonMystere.js: Loading level ${currentLevel + 1}.`)
@@ -55,7 +58,7 @@ const initSaisonMystere = (gameCompletion, setGameCompleted) => {
             console.log("saisonMystere.js: All levels completed.");
             gameContainer.innerHTML = `<h3>Félicitations ! Tu as terminé tous les niveaux de Saison Mystère !</h3>
                                        <p>Tu as gagné 🪙 50 pièces !</p>`;
-            window.addCoins(50);
+            addCoins(50);
             setGameCompleted('saisonMystere'); // Mark game as completed
             // Optionally, go back to home screen or show a completion message
         }
@@ -72,7 +75,7 @@ const initSaisonMystere = (gameCompletion, setGameCompleted) => {
 
         if (isCorrect) {
             feedbackDiv.textContent = '✨';
-            window.addStars(1);
+            addStars(1);
             anime({
                 targets: feedbackDiv,
                 translateY: [-50, -150],
@@ -246,7 +249,7 @@ const initSaisonMystere = (gameCompletion, setGameCompleted) => {
             const correctOrder = Array.from({ length: poemVerses.length }, (_, i) => i);
 
             const isCorrect = JSON.stringify(currentOrder) === JSON.stringify(correctOrder);
-            giveFeedback(isCorrect);
+            showFeedback(isCorrect);
 
             if (isCorrect) {
                 setTimeout(() => {
@@ -318,7 +321,7 @@ const initSaisonMystere = (gameCompletion, setGameCompleted) => {
                                      <p>Tu as eu ${correctAnswersCount} bonnes réponses sur ${questions.length} !</p>`;
                 if (correctAnswersCount === questions.length) {
                     quizDiv.innerHTML += `<p>Super ! Tu as tout bon ! ✨</p>`;
-                    window.addStars(5);
+                    addStars(5);
                 }
                 setTimeout(() => {
                     currentLevel++;
@@ -331,7 +334,7 @@ const initSaisonMystere = (gameCompletion, setGameCompleted) => {
             console.log(`saisonMystere.js: Checking True/False answer: ${userAnswer}`);
             const correctAnswer = questions[currentQuestionIndex].answer;
             const isCorrect = (userAnswer === correctAnswer);
-            giveFeedback(isCorrect);
+            showFeedback(isCorrect);
 
             if (isCorrect) {
                 correctAnswersCount++;
@@ -426,7 +429,7 @@ const initSaisonMystere = (gameCompletion, setGameCompleted) => {
                                          <p>Tu as eu ${correctAnswersCount} bonnes réponses sur ${questions.length} !</p>`;
                 if (correctAnswersCount === questions.length) {
                     listenFindDiv.innerHTML += `<p>Excellent ! ✨</p>`;
-                    window.addStars(5);
+                    addStars(5);
                 }
                 setTimeout(() => {
                     currentLevel++;
@@ -448,7 +451,7 @@ const initSaisonMystere = (gameCompletion, setGameCompleted) => {
         function checkAnswer(selectedKeyword, correctKeyword) {
             console.log(`saisonMystere.js: Checking Listen & Find answer. Selected: ${selectedKeyword}, Correct: ${correctKeyword}`);
             const isCorrect = (selectedKeyword === correctKeyword);
-            giveFeedback(isCorrect);
+            showFeedback(isCorrect);
 
             if (isCorrect) {
                 correctAnswersCount++;
@@ -531,7 +534,7 @@ const initSaisonMystere = (gameCompletion, setGameCompleted) => {
                                      <p>Tu as eu ${correctAnswersCount} bonnes réponses sur ${questions.length} !</p>`;
                 if (correctAnswersCount === questions.length) {
                     rhymeDiv.innerHTML += `<p>Fantastique ! ✨</p>`;
-                    window.addStars(5);
+                    addStars(5);
                 }
                 setTimeout(() => {
                     currentLevel++;
@@ -545,7 +548,7 @@ const initSaisonMystere = (gameCompletion, setGameCompleted) => {
             const userAnswer = answerInput.value.trim().toLowerCase();
             const correctAnswer = questions[currentQuestionIndex].correctAnswer.toLowerCase();
             const isCorrect = (userAnswer === correctAnswer);
-            giveFeedback(isCorrect);
+            showFeedback(isCorrect);
 
             if (isCorrect) {
                 correctAnswersCount++;
@@ -556,6 +559,116 @@ const initSaisonMystere = (gameCompletion, setGameCompleted) => {
         }
 
         displayQuestion();
+    }
+
+    // --- Extra Mode: Short Poem Display (faster) ---
+    function setupPoemDisplayShort() {
+        console.log("saisonMystere.js: Setting up short poem display.");
+        const shortDiv = document.createElement('div');
+        shortDiv.style.padding = '20px';
+        shortDiv.style.backgroundColor = '#FFFDE7';
+        shortDiv.style.borderRadius = 'var(--border-radius-md)';
+        shortDiv.style.boxShadow = 'var(--shadow-small)';
+
+        const preview = poemVerses.slice(0, 4).join('\n');
+        const p = document.createElement('p');
+        p.textContent = preview;
+        p.style.whiteSpace = 'pre-wrap';
+        p.style.fontSize = '1.2em';
+        shortDiv.appendChild(p);
+
+        const nextButton = document.createElement('button');
+        nextButton.className = 'btn-primary';
+        nextButton.textContent = 'Suivant';
+        nextButton.style.marginTop = '20px';
+        nextButton.addEventListener('click', () => {
+            currentLevel++;
+            loadLevel();
+        });
+        shortDiv.appendChild(nextButton);
+        gameContainer.appendChild(shortDiv);
+    }
+
+    // --- Extra Mode: Mini Poem Puzzle (small subset) ---
+    function setupMiniPoemPuzzle() {
+        console.log("saisonMystere.js: Setting up mini poem puzzle.");
+        const subset = poemVerses.slice(0, 6);
+        const shuffled = [...subset].sort(() => Math.random() - 0.5);
+
+        const instr = document.createElement('p');
+        instr.textContent = 'Remets ces vers courts dans le bon ordre :';
+        instr.style.marginBottom = '12px';
+        gameContainer.appendChild(instr);
+
+        const list = document.createElement('ol');
+        list.style.listStyle = 'decimal';
+        list.style.textAlign = 'left';
+        list.style.maxWidth = '640px';
+        list.style.margin = '0 auto 20px auto';
+
+        shuffled.forEach((v, i) => {
+            const li = document.createElement('li');
+            li.textContent = v;
+            li.style.padding = '8px';
+            li.style.borderRadius = '8px';
+            li.style.background = '#FFF8E1';
+            li.style.marginBottom = '8px';
+            li.dataset.idx = subset.indexOf(v);
+            li.addEventListener('click', () => li.classList.toggle('selected'));
+            list.appendChild(li);
+        });
+        gameContainer.appendChild(list);
+
+        const checkBtn = document.createElement('button');
+        checkBtn.className = 'btn-primary';
+        checkBtn.textContent = 'Vérifier ordre';
+        checkBtn.addEventListener('click', () => {
+            const selectedOrder = Array.from(list.children).map(ch => parseInt(ch.dataset.idx));
+            const correctOrder = Array.from({ length: subset.length }, (_, i) => i);
+            const isCorrect = JSON.stringify(selectedOrder) === JSON.stringify(correctOrder);
+            giveFeedback(isCorrect);
+            if (isCorrect) {
+                setTimeout(() => { currentLevel++; loadLevel(); }, 1200);
+            }
+        });
+        gameContainer.appendChild(checkBtn);
+    }
+
+    // --- Extra Mode: Quick Quiz (3 short Qs) ---
+    function setupQuickQuiz() {
+        console.log('saisonMystere.js: Setting up quick quiz');
+        const qlist = [
+            { q: 'Les feuilles tombent en automne.', a: true },
+            { q: 'Le soleil brille plus longtemps en hiver.', a: false },
+            { q: 'On porte parfois un pull en automne.', a: true }
+        ];
+        let qi = 0, correct = 0;
+        const qDiv = document.createElement('div');
+        qDiv.style.marginBottom = '12px';
+        const text = document.createElement('p');
+        text.style.fontSize = '1.2em';
+        qDiv.appendChild(text);
+
+        const btns = document.createElement('div');
+        btns.style.display = 'flex'; btns.style.gap = '12px'; btns.style.justifyContent = 'center';
+        const tBtn = document.createElement('button'); tBtn.className = 'btn-primary'; tBtn.textContent = 'Vrai';
+        const fBtn = document.createElement('button'); fBtn.className = 'btn-primary'; fBtn.textContent = 'Faux';
+        btns.appendChild(tBtn); btns.appendChild(fBtn);
+        gameContainer.appendChild(qDiv); gameContainer.appendChild(btns);
+
+        function showQ() {
+            if (qi >= qlist.length) {
+                qDiv.innerHTML = `<h3>Quiz fini ! ${correct} / ${qlist.length}</h3>`;
+                if (correct === qlist.length) addStars(3);
+                setTimeout(() => { currentLevel++; loadLevel(); }, 1200);
+                return;
+            }
+            text.textContent = qlist[qi].q;
+        }
+        function answer(v) { if (v === qlist[qi].a) { correct++; giveFeedback(true); } else { giveFeedback(false); } qi++; setTimeout(showQ, 800); }
+        tBtn.addEventListener('click', () => answer(true));
+        fBtn.addEventListener('click', () => answer(false));
+        showQ();
     }
 
     // --- Initialize the game ---

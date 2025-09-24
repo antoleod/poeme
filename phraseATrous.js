@@ -1,78 +1,136 @@
-// phraseATrous.js - Logic for the "Phrase à Trous" mini-game
+// phraseATrous.js - Logic for the "Phrase à Trous" game, refactored to use BaseGame
 
-const initPhraseATrous = (gameContainer, gameData, setGameCompleted, showFeedback, addStars, addCoins, audioManager) => {
-    console.log("phraseATrous.js: initPhraseATrous called.");
-    let currentQuestionIndex = 0;
-    let correctAnswersCount = 0;
-    const questions = gameData.phraseATrous; // Get specific game data
+class PhraseATrousGame extends BaseGame {
+    constructor(gameContainer, gameData, gameManager) {
+        super(gameContainer, gameData, gameManager);
+        this.gameId = "phraseATrous";
+        this.questions = this.gameData.levels; // Assuming gameData for this game has a 'levels' array
+        this.currentQuestionIndex = 0;
+        this.score = 0;
 
-    function renderQuestion() {
-        if (currentQuestionIndex < questions.length) {
-            const question = questions[currentQuestionIndex];
-            const sentenceParts = question.sentence.split('...');
-
-            gameContainer.innerHTML = `
-                <div class="phrase-a-trous-question">
-                    <p class="sentence-display">${sentenceParts[0]} <span class="blank-space">_______</span> ${sentenceParts[1]}</p>
-                    <div class="options-container">
-                        ${question.options.map(option => `<button class="option-btn btn-primary" data-answer="${option}">${option}</button>`).join('')}
-                    </div>
-                </div>
-            `;
-
-            // Add event listeners to option buttons
-            gameContainer.querySelectorAll('.option-btn').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const selectedAnswer = event.target.dataset.answer;
-                    checkAnswer(selectedAnswer, question.answer, event.target);
-                });
-            });
-        } else {
-            gameContainer.innerHTML = `
-                <h3>Félicitations ! Tu as terminé le jeu !</h3>
-                <p>Tu as eu ${correctAnswersCount} bonnes réponses sur ${questions.length} !</p>
-                <p>Tu as gagné 🪙 20 pièces !</p>
-            `;
-            addCoins(20);
-            setGameCompleted('phraseATrous'); // Mark this specific game as completed
-        }
+        // Bind 'this' to methods that will be used as event listeners or callbacks
+        this.checkAnswer = this.checkAnswer.bind(this);
     }
 
-    function checkAnswer(selected, correct, targetButton) {
-        const isCorrect = (selected.toLowerCase() === correct.toLowerCase());
-        showFeedback(isCorrect, targetButton);
+    initLevel(level) {
+        this.currentLevel = level;
+        this.score = 0; // Score for the current 'run' of the game
+        this.isGameActive = true;
+        this.gameContainer.innerHTML = ''; // Clear previous game content
+
+        if (this.currentQuestionIndex >= this.questions.length) {
+            this.endGame(true); // All questions answered
+            return;
+        }
+
+        this.renderGame(this.questions[this.currentQuestionIndex]);
+        this.addEventListeners();
+        console.log(`${this.gameId}: Question ${this.currentQuestionIndex + 1} initialized.`);
+    }
+
+    renderGame(question) {
+        const blank = "...";
+        const sentenceParts = question.sentence.split(blank);
+
+        this.gameContainer.innerHTML = `
+            <div class="phrase-a-trous-game">
+                <p class="game-instructions">Complète la phrase avec le bon mot !</p>
+                <div class="sentence-display">
+                    <span>${sentenceParts[0]}</span>
+                    <span class="blank-space">${blank}</span>
+                    <span>${sentenceParts[1]}</span>
+                </div>
+                <div class="options-container"></div>
+            </div>
+        `;
+
+        const optionsContainer = this.gameContainer.querySelector('.options-container');
+        const shuffledOptions = [...question.options].sort(() => Math.random() - 0.5);
+
+        shuffledOptions.forEach(option => {
+            const button = document.createElement('button');
+            button.classList.add('btn-option');
+            button.textContent = option;
+            button.addEventListener('click', this.checkAnswer);
+            optionsContainer.appendChild(button);
+        });
+    }
+
+    addEventListeners() {
+        // Event listeners are added during renderGame for dynamically created buttons
+        // No need to add them here again, but this method must exist.
+    }
+
+    removeEventListeners() {
+        // Event listeners are removed implicitly when gameContainer.innerHTML is cleared
+        // or explicitly by re-rendering. For dynamically created buttons, this is sufficient.
+        // If there were persistent listeners, they would be removed here.
+        this.gameContainer.querySelectorAll('.btn-option').forEach(button => {
+            button.removeEventListener('click', this.checkAnswer);
+        });
+    }
+
+    checkAnswer(event) {
+        const selectedOption = event.target.textContent;
+        const currentQuestion = this.questions[this.currentQuestionIndex];
+        const isCorrect = (selectedOption === currentQuestion.correct);
+        
+        this.gameManager.showFeedback(isCorrect, event.target);
 
         if (isCorrect) {
-            addStars(1);
-            correctAnswersCount++;
-            // Update the blank space with the correct word
-            const blankSpace = gameContainer.querySelector('.blank-space');
+            this.score++;
+            this.gameManager.addStars(1);
+            this.gameManager.playSound('correct');
+            const blankSpace = this.gameContainer.querySelector('.blank-space');
             if (blankSpace) {
-                blankSpace.textContent = correct;
-                blankSpace.style.color = 'var(--primary-color)';
-                blankSpace.style.fontWeight = 'bold';
+                blankSpace.textContent = currentQuestion.correct;
+                blankSpace.style.color = 'var(--correct-color)';
+            }
+        } else {
+            this.gameManager.playSound('incorrect');
+            const blankSpace = this.gameContainer.querySelector('.blank-space');
+            if (blankSpace) {
+                blankSpace.textContent = currentQuestion.correct;
+                blankSpace.style.color = 'var(--incorrect-color)';
             }
         }
 
-        // Disable buttons after answer
-        gameContainer.querySelectorAll('.option-btn').forEach(button => {
-            button.disabled = true;
-            if (button.dataset.answer.toLowerCase() === correct.toLowerCase()) {
-                button.style.backgroundColor = '#4CAF50'; // Green for correct
-            } else if (button.dataset.answer.toLowerCase() === selected.toLowerCase()) {
-                button.style.backgroundColor = '#F44336'; // Red for incorrect
-            }
-        });
+        this.gameContainer.querySelectorAll('.btn-option').forEach(btn => btn.disabled = true);
 
         setTimeout(() => {
-            currentQuestionIndex++;
-            renderQuestion();
+            this.currentQuestionIndex++;
+            if (this.currentQuestionIndex < this.questions.length) {
+                this.renderGame(this.questions[this.currentQuestionIndex]);
+                this.addEventListeners(); // Re-add listeners for new buttons
+            } else {
+                this.endGame(true); // All questions answered, game completed
+            }
         }, 1500);
     }
 
-    // Initial render
-    renderQuestion();
-};
+    endGame(isCompleted) {
+        this.isGameActive = false;
+        this.removeEventListeners();
 
-// Expose to global scope
-window.initPhraseATrous = initPhraseATrous;
+        let message = '';
+        if (isCompleted) {
+            message = `Félicitations ! Tu as terminé le jeu avec un score de ${this.score} sur ${this.questions.length}.`;
+            this.gameManager.addCoins(50);
+            this.gameManager.setGameCompleted(this.gameId); // Mark the game as completed
+        } else {
+            message = `Le jeu est terminé. Ton score final est de ${this.score}.`;
+        }
+
+        this.gameContainer.innerHTML = `
+            <div class="game-completion">
+                <h3>Jeu terminé !</h3>
+                <p>${message}</p>
+                <button class="btn-secondary back-to-mini-games-menu">Retour aux Mini-Jeux</button>
+            </div>
+        `;
+        this.gameContainer.querySelector('.back-to-mini-games-menu').addEventListener('click', this.handleBackToMiniGames);
+        console.log(`${this.gameId}: Game ended. Completed: ${isCompleted}`);
+    }
+}
+
+

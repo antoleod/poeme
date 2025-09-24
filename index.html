@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Avatar World - Apprentissage Ludique</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&family=Fredoka:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
 </head>
@@ -16,7 +16,7 @@
                 <h3>Mon Avatar</h3>
                 <div id="current-avatar">
                     <!-- Avatar image/emoji will be displayed here -->
-                    <span role="img" aria-label="avatar" style="font-size: 80px;">😊</span>
+                    <span role="img" aria-label="avatar" style="font-size: 80px;">🦊</span>
                 </div>
                 <button id="change-avatar-btn" class="btn-sidebar">Changer</button>
             </div>
@@ -48,16 +48,18 @@
             <section id="avatar-selection-screen" class="screen">
                 <h2>Choisis ton Avatar</h2>
                 <div id="avatar-options">
-                    <span class="avatar-option" data-avatar="😊">😊</span>
-                    <span class="avatar-option" data-avatar="😃">😃</span>
-                    <span class="avatar-option" data-avatar="😎">😎</span>
-                    <span class="avatar-option" data-avatar="🥳">🥳</span>
-                    <span class="avatar-option" data-avatar="🤩">🤩</span>
                     <span class="avatar-option" data-avatar="🐶">🐶</span>
                     <span class="avatar-option" data-avatar="🐱">🐱</span>
-                    <span class="avatar-option" data-avatar="🍎">🍎</span>
-                    <span class="avatar-option" data-avatar="🍌">🍌</span>
-                    <span class="avatar-option" data-avatar="🍓">🍓</span>
+                    <span class="avatar-option" data-avatar="🦄" title="Licorne">🦄</span>
+                    <span class="avatar-option" data-avatar="🦁" title="Lion">🦁</span>
+                    <span class="avatar-option" data-avatar="🐧" title="Pingouin">🐧</span>
+                    <span class="avatar-option" data-avatar="🐼" title="Panda">🐼</span>
+                    <span class="avatar-option" data-avatar="🦊" title="Renard">🦊</span>
+                    <span class="avatar-option" data-avatar="🐸" title="Grenouille">🐸</span>
+                    <span class="avatar-option" data-avatar="🦉" title="Hibou">🦉</span>
+                    <span class="avatar-option" data-avatar="🐬" title="Dauphin">🐬</span>
+                    <span class="avatar-option" data-avatar="🐉" title="Dragon">🐉</span>
+
                 </div>
                 <div id="avatar-customization">
                     <h3>Personnalise ton Avatar</h3>
@@ -71,37 +73,26 @@
 
             <section id="saison-mystere-game" class="screen game-screen">
                 <h2>🍂 Saison Mystère</h2>
-                <div id="saison-mystere-content">
-                    <!-- Game content will be loaded here by saisonMystere.js -->
-                    <p>Chargement du jeu...</p>
-                </div>
+                <div id="saison-mystere-content"></div>
                 <button class="btn-secondary back-to-home">Retour aux jeux</button>
             </section>
 
             <section id="sons-magiques-game" class="screen game-screen">
                 <h2>🎶 Les Sons Magiques</h2>
-                <div id="sons-magiques-content">
-                    <!-- Game content will be loaded here by sonsMagiques.js -->
-                    <p>Chargement du jeu...</p>
-                </div>
+                <div id="sons-magiques-content"></div>
                 <button class="btn-secondary back-to-home">Retour aux jeux</button>
             </section>
 
             <section id="meteo-nature-game" class="screen game-screen">
                 <h2>☀️ Météo & Nature</h2>
-                <div id="meteo-nature-content">
-                    <!-- Game content will be loaded here by meteoNature.js -->
-                    <p>Chargement du jeu...</p>
-                </div>
-                <button class="btn-secondary back-to-home">Retour aux jeux</button>
+                <div id="meteo-nature-content"></div>
+                <button class="btn-secondary back-to-home">Retour à l'accueil</button>
             </section>
 
             <section id="boutique-screen" class="screen">
                 <h2>🛍️ Boutique d'Avatars</h2>
                 <p>Débloque de nouveaux accessoires avec tes pièces !</p>
-                <div id="boutique-items">
-                    <!-- Boutique items will be displayed here -->
-                </div>
+                <div id="boutique-items"></div>
                 <button class="btn-secondary back-to-home">Retour à l'accueil</button>
             </section>
 
@@ -117,7 +108,8 @@
                     <button class="mini-game-btn" data-game-id="jeuDeCopie">📝 Jeu de Copie</button>
                     <button class="mini-game-btn" data-game-id="motsCaches">🔍 Mots Cachés</button>
                     <button class="mini-game-btn" data-game-id="relierColonnes">🔗 Relier les Colonnes</button>
-                    <button class="mini-game-btn" data-game-id="puzzleLettres">🔡 Puzzle de Lettres</n                    <button class="mini-game-btn" data-game-id="calendrierInteractif">📅 Calendrier Interactif</button>
+                        <button class="mini-game-btn" data-game-id="puzzleLettres">🔡 Puzzle de Lettres</button>
+                        <button class="mini-game-btn" data-game-id="calendrierInteractif">📅 Calendrier Interactif</button>
                     <button class="mini-game-btn" data-game-id="jeuDesIntrus">🚫 Jeu des Intrus</button>
                     <button class="mini-game-btn" data-game-id="courseAuxEtoiles">⭐ Course aux Étoiles</button>
                     <button class="mini-game-btn" data-game-id="miniHistoire">📖 Mini-Histoire à Compléter</button>
@@ -208,6 +200,38 @@
         </main>
     </div>
 
+    <!-- Generic dynamic screen used by newer modular games or legacy games without dedicated containers -->
+    <section id="dynamic-game-screen" class="screen dynamic-game-screen" style="display:none;">
+        <div id="dynamic-game-container"></div>
+        <button class="btn-secondary back-to-home">Retour à l'accueil</button>
+    </section>
+
+    <!-- Decorative floating icons and confetti (kid-friendly background effects) -->
+    <div id="floatingDecor" aria-hidden="true">
+        <span class="floating-decor__icon" style="--left:8%; --top:75%; --delay:0s; --duration:20s;">🍁</span>
+        <span class="floating-decor__icon" style="--left:20%; --top:85%; --delay:2s; --duration:18s;">☁️</span>
+        <span class="floating-decor__icon" style="--left:35%; --top:80%; --delay:4s; --duration:22s;">🦊</span>
+        <span class="floating-decor__icon" style="--left:55%; --top:90%; --delay:1s; --duration:24s;">🌟</span>
+        <span class="floating-decor__icon" style="--left:72%; --top:78%; --delay:3s; --duration:19s;">🎈</span>
+        <span class="floating-decor__icon" style="--left:88%; --top:82%; --delay:5s; --duration:21s;">☀️</span>
+    </div>
+
+    <div id="confetti" aria-hidden="true">
+        <!-- Many small pieces created in HTML so CSS-only animation works -->
+        <i class="confetti" style="--left:2%; --delay:0s; --dur:6s; --size:10px; background:#FFD54F"></i>
+        <i class="confetti" style="--left:10%; --delay:0.6s; --dur:7s; --size:12px; background:#FF8A65"></i>
+        <i class="confetti" style="--left:18%; --delay:1.2s; --dur:6.5s; --size:9px; background:#AED581"></i>
+        <i class="confetti" style="--left:26%; --delay:0.3s; --dur:7.5s; --size:11px; background:#4FC3F7"></i>
+        <i class="confetti" style="--left:34%; --delay:1.0s; --dur:6.2s; --size:10px; background:#CE93D8"></i>
+        <i class="confetti" style="--left:42%; --delay:0.8s; --dur:8s; --size:14px; background:#FFF176"></i>
+        <i class="confetti" style="--left:50%; --delay:1.6s; --dur:6.6s; --size:9px; background:#FFCDD2"></i>
+        <i class="confetti" style="--left:58%; --delay:0.4s; --dur:7.2s; --size:12px; background:#C5E1A5"></i>
+        <i class="confetti" style="--left:66%; --delay:1.8s; --dur:6.8s; --size:10px; background:#B39DDB"></i>
+        <i class="confetti" style="--left:74%; --delay:0.2s; --dur:7.8s; --size:11px; background:#FFCC80"></i>
+        <i class="confetti" style="--left:82%; --delay:1.1s; --dur:6.4s; --size:9px; background:#80DEEA"></i>
+        <i class="confetti" style="--left:90%; --delay:0.5s; --dur:7.1s; --size:13px; background:#F8BBD0"></i>
+    </div>
+
     <script src="script.js"></script>
     <script src="audioManager.js"></script>
     <script src="saisonMystere.js"></script>
@@ -222,6 +246,13 @@
     <script src="motsCaches.js"></script> <!-- New: Sixth mini-game -->
     <script src="relierColonnes.js"></script> <!-- New: Seventh mini-game -->
     <script src="puzzleLettres.js"></script> <!-- New: Eighth mini-game -->
+    <script src="calendrierInteractif.js"></script> <!-- New: Ninth mini-game -->
+    <script src="jeuDesIntrus.js"></script> <!-- New: Tenth mini-game -->
+    <script src="courseAuxEtoiles.js"></script> <!-- New: Eleventh mini-game -->
+    <script src="miniHistoire.js"></script> <!-- New: Twelfth mini-game -->
+    <script src="dicteeVocale.js"></script> <!-- New: Thirteenth mini-game -->
+    <script src="phraseMagique.js"></script> <!-- New: Fourteenth mini-game -->
+    <script src="modeRevision.js"></script> <!-- New: Fifteenth mini-game -->
     <!-- Add other mini-game scripts here as they are created -->
 </body>
 </html>
